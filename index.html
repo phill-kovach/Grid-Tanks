@@ -95,7 +95,7 @@
             transform: scale(1);
         }
 
-        #message-box, #start-menu {
+        #message-box, #start-menu, #options-menu {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -111,12 +111,12 @@
             max-width: 400px;
         }
         
-        #message-box h2, #start-menu h2 {
+        #message-box h2, #start-menu h2, #options-menu h2 {
             margin: 0 0 10px;
             color: #ff00ff;
         }
 
-        #message-box p, #start-menu p {
+        #message-box p, #start-menu p, #options-menu p {
             margin: 0 0 20px;
             font-size: 1.1em;
         }
@@ -283,6 +283,12 @@
         <button id="options-btn" class="game-button">Options</button>
     </div>
 
+    <div id="options-menu">
+        <h2>Options</h2>
+        <p>Controls and settings will be here.</p>
+        <button id="back-to-start-btn" class="game-button">Back</button>
+    </div>
+
     <div id="message-box">
         <h2 id="message-title">Game Over</h2>
         <p id="message-text">Your final score is: <span id="final-score">0</span></p>
@@ -303,7 +309,10 @@
         
         // New UI Elements
         const startMenu = document.getElementById('start-menu');
+        const optionsMenu = document.getElementById('options-menu');
         const startGameButton = document.getElementById('start-game-btn');
+        const optionsButton = document.getElementById('options-btn');
+        const backToStartButton = document.getElementById('back-to-start-btn');
         const upButton = document.getElementById('up-btn');
         const downButton = document.getElementById('down-btn');
         const leftButton = document.getElementById('left-btn');
@@ -544,16 +553,4 @@
                     for (const dir of directions) {
                         const testX = this.x + dir.x * CELL_SIZE;
                         const testY = this.y + dir.y * CELL_SIZE;
-                        if (!checkWallCollision(testX, testY, this.size)) {
-                            this.vx = dir.x * this.speed;
-                            this.vy = dir.y * this.speed;
-                            foundNewPath = true;
-                            break;
-                        }
-                    }
-                    if (!foundNewPath) {
-                        this.vx = -this.vx;
-                        this.vy = -this.vy;
-                    }
-                } else {
-                    this.x = 
+                        if (!checkWallCollision(testX, testY, this.size
