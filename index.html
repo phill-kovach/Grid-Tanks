@@ -95,7 +95,6 @@
             transform: scale(1);
         }
 
-        /* START: These are the key changes. The start menu is now visible by default. */
         #message-box, #options-menu {
             display: none;
         }
@@ -114,7 +113,6 @@
             width: 80%;
             max-width: 400px;
         }
-        /* END: Key CSS changes. */
 
         #message-box h2, #start-menu h2, #options-menu h2 {
             margin: 0 0 10px;
@@ -285,7 +283,8 @@
     <div id="start-menu">
         <h2>Space Paranoids Labyrinth</h2>
         <p>Use the D-Pad to move and the Fire button to shoot. Hold the Turret button and use the D-Pad to aim your turret.</p>
-        <button id="start-game-btn" class="game-button">Start Game</button>
+        <!-- The onclick attribute has been added here to directly call the startGame function -->
+        <button id="start-game-btn" class="game-button" onclick="startGame()">Start Game</button>
         <button id="options-btn" class="game-button">Options</button>
     </div>
     <!-- END: The start menu is now visible by default. -->
@@ -317,7 +316,7 @@
         // New UI Elements
         const startMenu = document.getElementById('start-menu');
         const optionsMenu = document.getElementById('options-menu');
-        const startGameButton = document.getElementById('start-game-btn');
+        // The startGameButton element is no longer needed since we are using the onclick attribute in HTML.
         const optionsButton = document.getElementById('options-btn');
         const backToStartButton = document.getElementById('back-to-start-btn');
         const upButton = document.getElementById('up-btn');
@@ -555,4 +554,4 @@
                 const newY = this.y + this.vy;
                 if (checkWallCollision(newX, newY, this.size)) {
                     const directions = [{x: 1, y: 0}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 0, y: -1}];
-                    directions.sort(() => Mat
+                
