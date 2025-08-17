@@ -6,7 +6,7 @@
     <title>Space Paranoids Labyrinth</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
-        
+
         body {
             background-color: #000;
             color: #00ffff;
@@ -20,21 +20,27 @@
             overflow: hidden;
             text-align: center;
         }
+        
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 98vh; /* Use vh to ensure full height on mobile */
+            width: 98vw;
+            max-width: 600px;
+        }
 
         #game-container {
             position: relative;
-            width: 95vmin;
-            height: 95vmin;
-            max-width: 600px;
-            max-height: 600px;
+            flex: 1; /* Takes up 50% of the available vertical space */
             background: #000;
             border: 2px solid #00ffff;
             box-shadow: 0 0 20px #00ffff, 0 0 10px #00ffff inset;
             border-radius: 10px;
             overflow: hidden;
             transition: box-shadow 0.5s ease-in-out, border-color 0.5s ease-in-out;
+            margin-bottom: 5px; /* Add some space between game and controls */
         }
-
+        
         #game-canvas {
             width: 100%;
             height: 100%;
@@ -42,545 +48,512 @@
         }
 
         .info-panel {
-            margin-top: 20px;
+            margin-top: 5px;
             display: flex;
             justify-content: space-between;
-            width: 95vmin;
-            max-width: 600px;
-            padding: 10px;
-            border: 2px solid #00ffff;
-            border-radius: 10px;
-            box-shadow: 0 0 20px #00ffff;
-            background: rgba(0, 0, 0, 0.5);
-            font-size: 1.2rem;
+            align-items: center;
+            font-size: 1.2em;
             text-shadow: 0 0 5px #00ffff;
-        }
-
-        .info-panel div {
-            flex: 1;
+            width: 100%;
+            padding: 0 5px;
         }
 
         #health-bar-container {
-            width: 100%;
+            width: 150px;
             height: 20px;
-            background-color: #333;
-            border: 2px solid #00ffff;
+            border: 2px solid #00ff00;
             border-radius: 5px;
-            margin-top: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 10px #00ffff;
+            box-shadow: 0 0 5px #00ff00;
         }
 
         #health-bar {
             height: 100%;
             background-color: #00ff00;
-            width: 100%;
             transition: width 0.3s ease-in-out;
         }
-
-        .game-overlay {
+        
+        .pause-button {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
+            color: #000;
+            background-color: #ff00ff;
+            border: 2px solid #ff00ff;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff00ff;
+            transition: all 0.3s ease;
             z-index: 10;
         }
-
-        .game-overlay h1 {
-            font-size: 3rem;
-            color: #00ffff;
-            text-shadow: 0 0 10px #00ffff;
+        .pause-button:hover {
+            transform: scale(1.05);
+        }
+        .pause-button:active {
+            transform: scale(1);
         }
 
-        .game-overlay p {
-            font-size: 1.5rem;
-            color: #fff;
-            margin-top: 20px;
-        }
-
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 30px;
+        #message-box, #start-menu {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #ff00ff;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px #ff00ff;
+            display: none;
+            z-index: 100;
+            width: 80%;
+            max-width: 400px;
         }
         
-        /* Updated button styles based on the Lightcycles-PWA1 code */
+        #message-box h2, #start-menu h2 {
+            margin: 0 0 10px;
+            color: #ff00ff;
+        }
+
+        #message-box p, #start-menu p {
+            margin: 0 0 20px;
+            font-size: 1.1em;
+        }
+        
         .game-button {
-            padding: 0.75rem 2.5rem;
-            font-size: 1.5rem;
-            font-weight: 700;
+            padding: 10px 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
             color: #000;
             background-color: #00ffff;
-            border: none;
-            border-radius: 9999px;
+            border: 2px solid #00ffff;
+            border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 0 12px 2px #00ffff, 0 0 6px 1px #00ffff inset;
-            transition: all 0.2s ease-in-out;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 10px #00ffff;
+            transition: all 0.3s ease;
+            margin: 5px;
         }
-
+        
         .game-button:hover {
-            background-color: #00e0e0;
-            box-shadow: 0 0 18px 4px #00ffff, 0 0 9px 2px #00ffff inset;
-            transform: translateY(-2px);
+            transform: scale(1.05);
+            background-color: #33ffff;
+            box-shadow: 0 0 20px #00ffff;
+        }
+        
+        .game-button:active {
+            transform: scale(1);
+            box-shadow: 0 0 5px #00ffff;
+        }
+        
+        .game-controls-container {
+            flex: 1; /* Takes up the remaining 50% of vertical space */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            margin-top: 5px;
+            width: 100%;
         }
 
-        .hidden {
-            display: none;
+        .d-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 150px;
+            height: 150px;
+            background: #333;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ffff;
+        }
+        
+        .d-pad-btn {
+            background: #555;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .d-pad-btn:hover {
+            background: #888;
+            box-shadow: 0 0 5px #00ffff;
+        }
+        
+        .d-pad-btn:active {
+            background: #bbb;
+            transform: scale(0.95);
+        }
+
+        .d-pad-btn.up { grid-area: 1 / 2 / 2 / 3; border-radius: 10px 10px 0 0; }
+        .d-pad-btn.left { grid-area: 2 / 1 / 3 / 2; border-radius: 10px 0 0 10px; }
+        .d-pad-btn.right { grid-area: 2 / 3 / 3 / 4; border-radius: 0 10px 10px 0; }
+        .d-pad-btn.down { grid-area: 3 / 2 / 4 / 3; border-radius: 0 0 10px 10px; }
+        .d-pad-center { grid-area: 2 / 2 / 3 / 3; background: #333; }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            width: 150px;
+            height: 150px;
+            margin-left: 50px;
+        }
+
+        .action-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid #ff00ff;
+            background-color: #cc00cc;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2em;
+            cursor: pointer;
+            box-shadow: 0 0 10px #ff00ff;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.9);
+            box-shadow: 0 0 5px #ff00ff;
+        }
+        
+        .action-btn.fire {
+            background-color: #ff0000;
+            border-color: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+        
+        .action-btn.turret {
+            background-color: #00ff00;
+            border-color: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .instructions {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #888;
         }
     </style>
 </head>
 <body>
-
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-
-        <div id="start-menu" class="game-overlay">
-            <h1>Space Paranoids</h1>
-            <p>A TRON-inspired labyrinth shooter.</p>
-            <div class="button-group">
-                <button id="startButton" class="game-button">Start Game</button>
-            </div>
-        </div>
-        
-        <div id="game-over-menu" class="game-overlay hidden">
-            <h1>Game Over</h1>
-            <p>Final Score: <span id="box-score">0</span></p>
-            <div class="button-group">
-                <button id="boxRestartButton" class="game-button">Restart</button>
-            </div>
+    <div class="game-wrapper">
+        <div id="game-container">
+            <canvas id="game-canvas"></canvas>
+            <button class="pause-button" id="pause-button">Pause</button>
         </div>
 
+        <div class="game-controls-container">
+            <div class="d-pad">
+                <button id="up-btn" class="d-pad-btn up" data-direction="up">▲</button>
+                <button id="left-btn" class="d-pad-btn left" data-direction="left">◄</button>
+                <button id="right-btn" class="d-pad-btn right" data-direction="right">►</button>
+                <button id="down-btn" class="d-pad-btn down" data-direction="down">▼</button>
+                <div class="d-pad-center"></div>
+            </div>
+            <div class="action-buttons">
+                <button id="fire-btn" class="action-btn fire">FIRE</button>
+                <button id="turret-btn" class="action-btn turret">TURRET</button>
+            </div>
+        </div>
     </div>
-
+    
     <div class="info-panel">
-        <div>Score: <span id="scoreDisplay">0</span></div>
-        <div>Enemies: <span id="enemiesDisplay">0</span></div>
+        <p>Score: <span id="score-display">0</span></p>
+        <p>Hi-Score: <span id="hi-score-display">0</span></p>
+        <p>Enemies Left: <span id="enemies-display">3</span></p>
+        <p>Health: <div id="health-bar-container"><div id="health-bar"></div></div></p>
     </div>
-    <div id="health-bar-container">
-        <div id="health-bar"></div>
+
+    <div id="start-menu">
+        <h2>Space Paranoids Labyrinth</h2>
+        <p>Use the D-Pad to move and the Fire button to shoot. Hold the Turret button and use the D-Pad to aim your turret.</p>
+        <button id="start-game-btn" class="game-button">Start Game</button>
+        <button id="options-btn" class="game-button">Options</button>
+    </div>
+
+    <div id="message-box">
+        <h2 id="message-title">Game Over</h2>
+        <p id="message-text">Your final score is: <span id="final-score">0</span></p>
+        <button id="box-restart-button" class="game-button">Play Again</button>
     </div>
     <script>
-        // Get the canvas and its context
         const canvas = document.getElementById('game-canvas');
         const ctx = canvas.getContext('2d');
-
-        // Game state variables and constants
-        const WALL_SIZE = 20;
-        const CELL_SIZE = 40;
-        const MAZE_WIDTH = 15;
-        const MAZE_HEIGHT = 15;
-        let maze = [];
-        let isTransitioningLevel = false;
-        let currentLevel = 1;
-        const defaultBorderShadow = '0 0 20px #00ffff, 0 0 10px #00ffff inset';
-        const defaultBorderColor = '#00ffff';
-
-        // DOM elements
-        const startMenu = document.getElementById('start-menu');
-        const startButton = document.getElementById('startButton');
-        const gameOverMenu = document.getElementById('game-over-menu');
-        const boxRestartButton = document.getElementById('boxRestartButton');
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        const enemiesDisplay = document.getElementById('enemiesDisplay');
+        const scoreDisplay = document.getElementById('score-display');
+        const hiScoreDisplay = document.getElementById('hi-score-display');
+        const enemiesDisplay = document.getElementById('enemies-display');
+        const messageBox = document.getElementById('message-box');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const boxRestartButton = document.getElementById('box-restart-button');
         const healthBar = document.getElementById('health-bar');
         const gameContainer = document.getElementById('game-container');
-        const messageBox = document.getElementById('message-box');
+        const pauseButton = document.getElementById('pause-button');
+        
+        // New UI Elements
+        const startMenu = document.getElementById('start-menu');
+        const startGameButton = document.getElementById('start-game-btn');
+        const upButton = document.getElementById('up-btn');
+        const downButton = document.getElementById('down-btn');
+        const leftButton = document.getElementById('left-btn');
+        const rightButton = document.getElementById('right-btn');
+        const fireButton = document.getElementById('fire-btn');
+        const turretButton = document.getElementById('turret-btn');
 
-        // Player object
-        const player = {
-            x: 0,
-            y: 0,
-            size: 15,
-            health: 100,
-            baseSpeed: 3,
-            currentSpeed: 3,
-            baseFireRate: 200, // milliseconds
-            currentFireRate: 200,
-            lastShotTime: 0,
-            isFiring: false,
-        };
-
-        let projectiles = [];
-        let enemies = [];
-        let enemyProjectiles = [];
+        let isGameOver = true;
+        let isPaused = true;
+        let score = 0;
+        let highScore = localStorage.getItem('hiScore') || 0;
+        let animationFrameId;
         let explosions = [];
         let powerUps = [];
-        let score = 0;
-        let powerUpEffectTimeoutId = null;
+        let lastPowerUpSpawn = 0;
+        let isTransitioningLevel = false;
+        let levelTimeoutId = null;
+        let playerDefaultColor = '#00ffff';
+        let playerIsFlashing = false;
+        let defaultBorderColor = '#00ffff';
+        let defaultBorderShadow = '0 0 20px #00ffff, 0 0 10px #00ffff inset';
 
-        // Player movement and shooting
-        const keys = {};
-        document.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
-            if (e.key === ' ' || e.key === 'Spacebar') {
-                e.preventDefault();
-                player.isFiring = true;
-            }
-        });
-        document.addEventListener('keyup', (e) => {
-            keys[e.key] = false;
-            if (e.key === ' ' || e.key === 'Spacebar') {
-                player.isFiring = false;
-            }
-        });
+        // Maze dimensions
+        const MAZE_WIDTH = 13;
+        const MAZE_HEIGHT = 13;
+        let CELL_SIZE = 40;
+        let maze = [];
 
-        canvas.addEventListener('mousedown', (e) => {
-            player.isFiring = true;
-        });
-
-        canvas.addEventListener('mouseup', (e) => {
-            player.isFiring = false;
-        });
-
-        // Touch controls for mobile
-        let touchTimer = null;
-        let touchStartX, touchStartY;
-        let touchCurrentX, touchCurrentY;
-
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            player.isFiring = true;
-
-            // Start a timer to handle shooting vs movement
-            touchTimer = setTimeout(() => {
-                player.isFiring = false;
-            }, 200);
-
-        }, { passive: false });
-
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            touchCurrentX = touch.clientX;
-            touchCurrentY = touch.clientY;
-            
-            // Clear the timer if the user is moving their finger
-            clearTimeout(touchTimer);
-            player.isFiring = false;
-            
-            // Handle movement based on swipe direction
-            const dx = touchCurrentX - touchStartX;
-            const dy = touchCurrentY - touchStartY;
-            
-            // Simulate key presses for movement
-            const threshold = 10;
-            keys['w'] = keys['ArrowUp'] = dy < -threshold;
-            keys['s'] = keys['ArrowDown'] = dy > threshold;
-            keys['a'] = keys['ArrowLeft'] = dx < -threshold;
-            keys['d'] = keys['ArrowRight'] = dx > threshold;
-
-        }, { passive: false });
-
-        canvas.addEventListener('touchend', (e) => {
-            clearTimeout(touchTimer);
-            player.isFiring = false;
-            // Reset keys
-            keys['w'] = keys['s'] = keys['a'] = keys['d'] = false;
-            keys['ArrowUp'] = keys['ArrowDown'] = keys['ArrowLeft'] = keys['ArrowRight'] = false;
-        });
-
-        // Utility functions
-        function randomInt(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-        }
-
-        // Maze generation using Recursive Backtracking algorithm
         function generateMaze() {
-            // Initialize the maze grid
-            maze = [];
-            for (let y = 0; y < MAZE_HEIGHT; y++) {
-                maze[y] = [];
-                for (let x = 0; x < MAZE_WIDTH; x++) {
-                    maze[y][x] = {
-                        x, y,
-                        visited: false,
-                        walls: { top: true, right: true, bottom: true, left: true }
-                    };
-                }
-            }
-
+            maze = Array(MAZE_HEIGHT).fill(null).map(() => Array(MAZE_WIDTH).fill(1));
             const stack = [];
-            let current = maze[0][0];
-            current.visited = true;
-            stack.push(current);
-
-            while (stack.length > 0) {
-                const neighbors = getUnvisitedNeighbors(current);
+            const startX = Math.floor(Math.random() * MAZE_WIDTH);
+            const startY = Math.floor(Math.random() * MAZE_HEIGHT);
+            stack.push({ x: startX, y: startY });
+            maze[startY][startX] = 0;
+            const directions = [{x: 0, y: 1}, {x: 0, y: -1}, {x: 1, y: 0}, {x: -1, y: 0}];
+            while(stack.length > 0) {
+                const current = stack[stack.length - 1];
+                const neighbors = [];
+                directions.forEach(dir => {
+                    const nextX = current.x + dir.x * 2;
+                    const nextY = current.y + dir.y * 2;
+                    if (nextX >= 0 && nextX < MAZE_WIDTH && nextY >= 0 && nextY < MAZE_HEIGHT && maze[nextY][nextX] === 1) {
+                        neighbors.push({ x: nextX, y: nextY, dir: dir });
+                    }
+                });
                 if (neighbors.length > 0) {
-                    const next = neighbors[randomInt(0, neighbors.length - 1)];
-                    removeWalls(current, next);
-                    stack.push(next);
-                    current = next;
-                    current.visited = true;
+                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    maze[current.y + next.dir.y][current.x + next.dir.x] = 0;
+                    maze[next.y][next.x] = 0;
+                    stack.push({ x: next.x, y: next.y });
                 } else {
-                    current = stack.pop();
+                    stack.pop();
                 }
             }
         }
 
-        function getUnvisitedNeighbors(cell) {
-            const neighbors = [];
-            if (cell.y > 0 && !maze[cell.y - 1][cell.x].visited) {
-                neighbors.push(maze[cell.y - 1][cell.x]); // Top
-            }
-            if (cell.x < MAZE_WIDTH - 1 && !maze[cell.y][cell.x + 1].visited) {
-                neighbors.push(maze[cell.y][cell.x + 1]); // Right
-            }
-            if (cell.y < MAZE_HEIGHT - 1 && !maze[cell.y + 1][cell.x].visited) {
-                neighbors.push(maze[cell.y + 1][cell.x]); // Bottom
-            }
-            if (cell.x > 0 && !maze[cell.y][cell.x - 1].visited) {
-                neighbors.push(maze[cell.y][cell.x - 1]); // Left
-            }
-            return neighbors;
-        }
-
-        function removeWalls(current, next) {
-            const dx = current.x - next.x;
-            const dy = current.y - next.y;
-
-            if (dx === 1) { // Current is to the right of next
-                current.walls.left = false;
-                next.walls.right = false;
-            } else if (dx === -1) { // Current is to the left of next
-                current.walls.right = false;
-                next.walls.left = false;
-            } else if (dy === 1) { // Current is below next
-                current.walls.top = false;
-                next.walls.bottom = false;
-            } else if (dy === -1) { // Current is above next
-                current.walls.bottom = false;
-                next.walls.top = false;
-            }
-        }
-
-        // Drawing functions
         function drawMaze() {
             ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 2;
+            ctx.shadowColor = '#00ffff';
+            ctx.shadowBlur = 10;
             for (let y = 0; y < MAZE_HEIGHT; y++) {
                 for (let x = 0; x < MAZE_WIDTH; x++) {
-                    const cell = maze[y][x];
-                    const startX = x * CELL_SIZE;
-                    const startY = y * CELL_SIZE;
-                    if (cell.walls.top) {
+                    if (maze[y][x] === 1) {
                         ctx.beginPath();
-                        ctx.moveTo(startX, startY);
-                        ctx.lineTo(startX + CELL_SIZE, startY);
-                        ctx.stroke();
-                    }
-                    if (cell.walls.right) {
-                        ctx.beginPath();
-                        ctx.moveTo(startX + CELL_SIZE, startY);
-                        ctx.lineTo(startX + CELL_SIZE, startY + CELL_SIZE);
-                        ctx.stroke();
-                    }
-                    if (cell.walls.bottom) {
-                        ctx.beginPath();
-                        ctx.moveTo(startX + CELL_SIZE, startY + CELL_SIZE);
-                        ctx.lineTo(startX, startY + CELL_SIZE);
-                        ctx.stroke();
-                    }
-                    if (cell.walls.left) {
-                        ctx.beginPath();
-                        ctx.moveTo(startX, startY + CELL_SIZE);
-                        ctx.lineTo(startX, startY);
+                        ctx.rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                         ctx.stroke();
                     }
                 }
             }
-        }
-
-        function drawPlayer() {
-            ctx.beginPath();
-            ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-            ctx.fillStyle = '#00ff00';
-            ctx.shadowColor = '#00ff00';
-            ctx.shadowBlur = 10;
-            ctx.fill();
             ctx.shadowBlur = 0;
         }
 
-        function drawProjectiles() {
-            projectiles.forEach(p => {
+        // Player (Tank)
+        const player = {
+            x: 0,
+            y: 0,
+            size: 20,
+            baseSpeed: 3,
+            currentSpeed: 3,
+            baseFireRate: 300,
+            currentFireRate: 300,
+            health: 100,
+            maxHealth: 100,
+            color: playerDefaultColor,
+            velocity: { x: 0, y: 0 },
+            turretAngle: -Math.PI / 2,
+            draw: function() {
+                ctx.fillStyle = this.color;
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = '#ff00ff';
-                ctx.shadowColor = '#ff00ff';
-                ctx.shadowBlur = 10;
+                ctx.rect(this.x, this.y, this.size, this.size);
                 ctx.fill();
-                ctx.shadowBlur = 0;
-            });
+                ctx.stroke();
 
-            enemyProjectiles.forEach(p => {
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = '#ff0000';
-                ctx.shadowColor = '#ff0000';
-                ctx.shadowBlur = 10;
-                ctx.fill();
+                ctx.moveTo(this.x + this.size / 2, this.y + this.size / 2);
+                const turretLength = this.size * 1.0;
+                const turretX = this.x + this.size / 2 + turretLength * Math.cos(this.turretAngle);
+                const turretY = this.y + this.size / 2 + turretLength * Math.sin(this.turretAngle);
+                ctx.lineTo(turretX, turretY);
+                ctx.lineWidth = 4;
+                ctx.stroke();
                 ctx.shadowBlur = 0;
-            });
-        }
+            },
+            update: function() {
+                const newX = this.x + this.velocity.x;
+                const newY = this.y + this.velocity.y;
+                if (!checkWallCollision(newX, newY, this.size)) {
+                    this.x = newX;
+                    this.y = newY;
+                }
+            }
+        };
 
-        function drawEnemies() {
-            enemies.forEach(enemy => {
-                ctx.fillStyle = '#ff0000';
-                ctx.shadowColor = '#ff0000';
-                ctx.shadowBlur = 10;
-                ctx.fillRect(enemy.x - enemy.size / 2, enemy.y - enemy.size / 2, enemy.size, enemy.size);
-                ctx.shadowBlur = 0;
-            });
-        }
-
-        function drawExplosions() {
-            explosions.forEach(exp => {
-                ctx.beginPath();
-                ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
-                ctx.fillStyle = exp.color;
-                ctx.shadowColor = exp.color;
-                ctx.shadowBlur = 15;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            });
-        }
-
-        function drawPowerUps() {
-            powerUps.forEach(pu => {
-                ctx.fillStyle = pu.color;
-                ctx.shadowColor = pu.color;
-                ctx.shadowBlur = 10;
-                ctx.fillRect(pu.x - pu.size / 2, pu.y - pu.size / 2, pu.size, pu.size);
-                ctx.shadowBlur = 0;
-            });
-        }
-
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // Game logic functions
         function updateHealthBar() {
-            healthBar.style.width = `${Math.max(0, player.health)}%`;
-            if (player.health > 70) {
-                healthBar.style.backgroundColor = '#00ff00';
-            } else if (player.health > 30) {
-                healthBar.style.backgroundColor = '#ffff00';
-            } else {
-                healthBar.style.backgroundColor = '#ff0000';
+            const healthPercentage = (player.health / player.maxHealth) * 100;
+            healthBar.style.width = `${healthPercentage}%`;
+            healthBar.style.backgroundColor = healthPercentage > 50 ? '#00ff00' : (healthPercentage > 25 ? '#ffff00' : '#ff0000');
+            healthBar.style.boxShadow = `0 0 5px ${healthBar.style.backgroundColor}`;
+        }
+
+        class Projectile {
+            constructor(x, y, vx, vy, color, target = 'enemy') {
+                this.x = x;
+                this.y = y;
+                this.size = 5;
+                this.vx = vx;
+                this.vy = vy;
+                this.color = color;
+                this.target = target;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
             }
         }
 
-        function movePlayer() {
-            const oldX = player.x;
-            const oldY = player.y;
+        let projectiles = [];
+        let enemyProjectiles = [];
+        let powerUpSpawnTimer = 0;
+        let powerUpSpawnInterval = 5000;
 
-            if (keys['w'] || keys['ArrowUp']) {
-                player.y -= player.currentSpeed;
+        class PowerUp {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.size = 15;
+                this.type = type;
+                this.color = '';
+                this.duration = 5000;
+                if (type === 'health') this.color = '#00ff00';
+                if (type === 'speed') this.color = '#ffff00';
+                if (type === 'fireRate') this.color = '#ff00ff';
             }
-            if (keys['s'] || keys['ArrowDown']) {
-                player.y += player.currentSpeed;
-            }
-            if (keys['a'] || keys['ArrowLeft']) {
-                player.x -= player.currentSpeed;
-            }
-            if (keys['d'] || keys['ArrowRight']) {
-                player.x += player.currentSpeed;
-            }
-
-            // Boundary and wall collision detection
-            const cellX = Math.floor(player.x / CELL_SIZE);
-            const cellY = Math.floor(player.y / CELL_SIZE);
-            const cell = maze[cellY] && maze[cellY][cellX] ? maze[cellY][cellX] : null;
-
-            if (!cell) {
-                player.x = oldX;
-                player.y = oldY;
-                return;
-            }
-
-            // Wall collision based on position within the cell
-            const cellStartX = cellX * CELL_SIZE;
-            const cellStartY = cellY * CELL_SIZE;
-
-            if (cell.walls.top && player.y - player.size < cellStartY) {
-                player.y = oldY;
-            }
-            if (cell.walls.bottom && player.y + player.size > cellStartY + CELL_SIZE) {
-                player.y = oldY;
-            }
-            if (cell.walls.left && player.x - player.size < cellStartX) {
-                player.x = oldX;
-            }
-            if (cell.walls.right && player.x + player.size > cellStartX + CELL_SIZE) {
-                player.x = oldX;
-            }
-
-            // Keep player within the canvas
-            player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
-            player.y = Math.max(player.size, Math.min(canvas.height - player.size, player.y));
-        }
-
-        function handlePlayerShooting() {
-            if (player.isFiring && Date.now() - player.lastShotTime > player.currentFireRate) {
-                projectiles.push({
-                    x: player.x,
-                    y: player.y,
-                    size: 5,
-                    dx: 0,
-                    dy: -10,
-                    damage: 10
-                });
-                player.lastShotTime = Date.now();
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 15;
+                ctx.beginPath();
+                ctx.arc(this.x + this.size / 2, this.y + this.size / 2, this.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
             }
         }
 
-        function updateProjectiles() {
-            projectiles.forEach(p => {
-                p.x += p.dx;
-                p.y += p.dy;
-            });
-            projectiles = projectiles.filter(p => p.y > 0);
-
-            enemyProjectiles.forEach(p => {
-                p.x += p.dx;
-                p.y += p.dy;
-            });
-            enemyProjectiles = enemyProjectiles.filter(p => p.y < canvas.height);
+        function spawnPowerUp() {
+            const powerUpTypes = ['health', 'speed', 'fireRate'];
+            const type = powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)];
+            let placed = false;
+            let attempts = 0;
+            while(!placed && attempts < 100) {
+                const x = Math.floor(Math.random() * MAZE_WIDTH);
+                const y = Math.floor(Math.random() * MAZE_HEIGHT);
+                if (maze[y][x] === 0) {
+                    const powerUp = new PowerUp(
+                        x * CELL_SIZE + (CELL_SIZE - 15) / 2,
+                        y * CELL_SIZE + (CELL_SIZE - 15) / 2,
+                        type
+                    );
+                    powerUps.push(powerUp);
+                    placed = true;
+                }
+                attempts++;
+            }
         }
 
-        function checkProjectileCollisions() {
-            // Player projectiles vs Enemies
-            projectiles.forEach((p, pIndex) => {
-                enemies.forEach((e, eIndex) => {
-                    const distance = Math.sqrt(Math.pow(p.x - e.x, 2) + Math.pow(p.y - e.y, 2));
-                    if (distance < p.size + e.size / 2) {
-                        e.health -= p.damage;
-                        projectiles.splice(pIndex, 1);
-                        if (e.health <= 0) {
-                            spawnExplosion(e.x, e.y, '#ff0000');
-                            enemies.splice(eIndex, 1);
-                            score += 100;
-                            updateScoreAndEnemiesDisplay();
+        class Enemy {
+            constructor() {
+                this.size = 20;
+                this.x = 0;
+                this.y = 0;
+                this.speed = 2;
+                this.color = '#ff9900';
+                this.lastShot = Date.now();
+                this.fireRate = 2000;
+                this.vx = (Math.random() < 0.5 ? 1 : -1) * this.speed;
+                this.vy = (Math.random() < 0.5 ? 1 : -1) * this.speed;
+            }
+            draw() {
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                
+                ctx.beginPath();
+                ctx.rect(this.x, this.y, this.size, this.size);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.size / 2, this.y + this.size / 2);
+                ctx.lineTo(this.x + this.size / 2, this.y + this.size);
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+            update() {
+                const newX = this.x + this.vx;
+                const newY = this.y + this.vy;
+                if (checkWallCollision(newX, newY, this.size)) {
+                    const directions = [{x: 1, y: 0}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 0, y: -1}];
+                    directions.sort(() => Math.random() - 0.5);
+                    let foundNewPath = false;
+                    for (const dir of directions) {
+                        const testX = this.x + dir.x * CELL_SIZE;
+                        const testY = this.y + dir.y * CELL_SIZE;
+                        if (!checkWallCollision(testX, testY, this.size)) {
+                            this.vx = dir.x * this.speed;
+                            this.vy = dir.y * this.speed;
+                            foundNewPath = true;
+                            break;
                         }
                     }
-                });
-            });
-
-            // Enemy projectiles vs Player
-            enemyProjectiles.forEach((p, pIndex) => {
-                const distance = Math.sqrt(Math.pow(p.x - player.x, 2) + Math.pow(p.y - player.y, 2));
-                if (distance < p.size + player.size) {
-                   
+                    if (!foundNewPath) {
+                        this.vx = -this.vx;
+                        this.vy = -this.vy;
+                    }
+                } else {
+                    this.x = 
