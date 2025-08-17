@@ -95,7 +95,12 @@
             transform: scale(1);
         }
 
-        #message-box, #start-menu, #options-menu {
+        /* START: These are the key changes. The start menu is now visible by default. */
+        #message-box, #options-menu {
+            display: none;
+        }
+        
+        #start-menu, #message-box, #options-menu {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -105,12 +110,12 @@
             padding: 20px 40px;
             border-radius: 10px;
             box-shadow: 0 0 15px #ff00ff;
-            display: none;
             z-index: 100;
             width: 80%;
             max-width: 400px;
         }
-        
+        /* END: Key CSS changes. */
+
         #message-box h2, #start-menu h2, #options-menu h2 {
             margin: 0 0 10px;
             color: #ff00ff;
@@ -251,7 +256,7 @@
     <div class="game-wrapper">
         <div id="game-container">
             <canvas id="game-canvas"></canvas>
-            <button class="pause-button" id="pause-button">Pause</button>
+            <button class="pause-button" id="pause-button" style="display: none;">Pause</button>
         </div>
 
         <div class="game-controls-container">
@@ -276,12 +281,14 @@
         <p>Health: <div id="health-bar-container"><div id="health-bar"></div></div></p>
     </div>
 
+    <!-- START: The start menu is now visible by default. -->
     <div id="start-menu">
         <h2>Space Paranoids Labyrinth</h2>
         <p>Use the D-Pad to move and the Fire button to shoot. Hold the Turret button and use the D-Pad to aim your turret.</p>
         <button id="start-game-btn" class="game-button">Start Game</button>
         <button id="options-btn" class="game-button">Options</button>
     </div>
+    <!-- END: The start menu is now visible by default. -->
 
     <div id="options-menu">
         <h2>Options</h2>
@@ -548,9 +555,4 @@
                 const newY = this.y + this.vy;
                 if (checkWallCollision(newX, newY, this.size)) {
                     const directions = [{x: 1, y: 0}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 0, y: -1}];
-                    directions.sort(() => Math.random() - 0.5);
-                    let foundNewPath = false;
-                    for (const dir of directions) {
-                        const testX = this.x + dir.x * CELL_SIZE;
-                        const testY = this.y + dir.y * CELL_SIZE;
-                        if (!checkWallCollision(testX, testY, this.size
+                    directions.sort(() => Mat
