@@ -748,7 +748,7 @@
         const generateLabyrinth = () => {
             walls = [];
             const canvasWidth = DOMElements.canvas.width;
-            const canvasHeight = DOMEElements.canvas.height;
+            const canvasHeight = DOMElements.canvas.height;
             const mazeSizeX = Math.floor(canvasWidth / GRID_SIZE);
             const mazeSizeY = Math.floor(canvasHeight / GRID_SIZE);
 
@@ -817,7 +817,6 @@
         // --- GAME LOGIC ---
         function startGame(mode) {
             currentMode = mode;
-            isGameOver = true;
             updateElementVisibility(DOMElements.gameMenu, false);
             updateElementVisibility(DOMElements.gameOverScreen, false);
             updateElementVisibility(DOMElements.pausedScreen, false);
@@ -843,7 +842,7 @@
             updateElementVisibility(DOMElements.countdownOverlay, true);
             DOMElements.countdownDisplay.textContent = "Ready?";
             setTimeout(() => { DOMElements.countdownDisplay.textContent = "Level " + currentLevel; }, 1000);
-            setTimeout(() => { DOMEElements.countdownDisplay.textContent = "Go!"; }, 2000);
+            setTimeout(() => { DOMElements.countdownDisplay.textContent = "Go!"; }, 2000);
             setTimeout(() => {
                 updateElementVisibility(DOMElements.countdownOverlay, false);
                 initLevel();
@@ -1072,10 +1071,10 @@
                     if (isGameOver || gamePaused) return;
                     InputManager.keys[e.key] = true;
                     // Player movement
-                    if (e.key === 'ArrowUp') playerTank.dx = 0; playerTank.dy = -PLAYER_SPEED;
-                    if (e.key === 'ArrowDown') playerTank.dx = 0; playerTank.dy = PLAYER_SPEED;
-                    if (e.key === 'ArrowLeft') playerTank.dx = -PLAYER_SPEED; playerTank.dy = 0;
-                    if (e.key === 'ArrowRight') playerTank.dx = PLAYER_SPEED; playerTank.dy = 0;
+                    if (e.key === 'ArrowUp') { playerTank.dx = 0; playerTank.dy = -PLAYER_SPEED; }
+                    if (e.key === 'ArrowDown') { playerTank.dx = 0; playerTank.dy = PLAYER_SPEED; }
+                    if (e.key === 'ArrowLeft') { playerTank.dx = -PLAYER_SPEED; playerTank.dy = 0; }
+                    if (e.key === 'ArrowRight') { playerTank.dx = PLAYER_SPEED; playerTank.dy = 0; }
                     // Turret rotation
                     if (InputManager.keys['Shift']) {
                         if (e.key === 'ArrowUp') playerTank.turretAngle = -Math.PI / 2;
