@@ -98,15 +98,9 @@
 
         #gameCanvas {
             background-color: var(--light-bg);
-            border: 4px solid var(--player-color);
             box-shadow: 0 0 20px 5px var(--player-color);
             transition: all 0.5s ease-in-out;
             border-radius: 8px;
-        }
-
-        /* Glowing effects for the border and player tank */
-        .glow-player {
-            box-shadow: 0 0 20px 5px #ff0000;
         }
 
         /* Overlays for menus and messages */
@@ -256,6 +250,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         .draggable:active {
@@ -298,6 +298,9 @@
             align-items: center;
             cursor: pointer;
             transition: all 0.1s ease;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
         }
 
         #dpad-container button.up { grid-area: up; }
@@ -322,7 +325,7 @@
             box-shadow: 0 0 8px #0ff;
             color: #0ff;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
@@ -333,25 +336,22 @@
             font-size: 10px;
             gap: 4px;
         }
-
-        .pause-action-btn {
-            border-radius: 50%;
-            width: 100px;
-            height: 100px;
-            background-color: var(--enemy-color);
-            border: 2px solid var(--enemy-color);
-            box-shadow: 0 0 8px var(--enemy-color);
-            color: var(--dark-bg);
+        
+        #pauseButton {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--player-color);
+            color: var(--player-color);
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            text-transform: uppercase;
-            font-weight: 700;
-            transition: all 0.1s ease;
-            line-height: 1;
-            font-size: 14px;
+            z-index: 10;
         }
 
         .ph { font-family: 'Phosphor-Regular', sans-serif; line-height: 1; }
@@ -388,13 +388,23 @@
             margin-bottom: 2rem;
             pointer-events: none;
         }
-
     </style>
 </head>
 <body>
     <div id="main-game-container" class="game-container">
         <!-- Game display section -->
         <div id="game-display-section" class="game-display-section">
+            <!-- Scoreboard and health -->
+            <div id="scoreboard-and-health">
+                <div class="score-container">
+                    <span class="user-score">Score: <span id="userScore">0</span></span>
+                </div>
+                <div id="health-meter-container">
+                    <div id="health-meter-bar"></div>
+                </div>
+            </div>
+            <button id="pauseButton" class="hidden"><i class="ph ph-pause"></i></button>
+
             <div id="game-board"><canvas id="gameCanvas"></canvas></div>
             <!-- Game Menus -->
             <div id="gameMenu" class="game-overlay">
@@ -445,19 +455,9 @@
 
         <!-- Mobile controls section -->
         <div id="controls-container" class="controls-container hidden">
-            <!-- Score and health -->
-            <div id="scoreboard-and-health" class="draggable">
-                <div class="score-container">
-                    <span class="user-score">Score: <span id="userScore">0</span></span>
-                </div>
-                <div id="health-meter-container">
-                    <div id="health-meter-bar"></div>
-                </div>
-                <div class="resize-handle"></div>
-            </div>
             <div id="buttons-layout" class="mobile-controls-layout hidden">
                 <!-- D-Pad buttons -->
-                <div id="dpad-container" class="draggable">
+                <div id="dpad-container" class="draggable" style="left: 10%; bottom: 10%;">
                     <button id="up-btn" class="up"><i class="ph ph-caret-up"></i></button>
                     <button id="down-btn" class="down"><i class="ph ph-caret-down"></i></button>
                     <button id="left-btn" class="left"><i class="ph ph-caret-left"></i></button>
@@ -465,7 +465,7 @@
                     <div class="resize-handle"></div>
                 </div>
                 <!-- Action buttons -->
-                <div id="action-controls-container" class="draggable">
+                <div id="action-controls-container" class="draggable" style="right: 10%; bottom: 10%;">
                     <button class="action-btn" id="fire-btn"><span><i class="ph ph-target-bold"></i></span>FIRE</button>
                     <button class="action-btn" id="turret-btn"><span><i class="ph ph-arrow-counter-clockwise"></i></span>TURRET</button>
                     <div class="resize-handle"></div>
@@ -539,6 +539,7 @@
             downBtn: document.getElementById('down-btn'),
             leftBtn: document.getElementById('left-btn'),
             rightBtn: document.getElementById('right-btn'),
+            pauseButton: document.getElementById('pauseButton'),
         };
         const ctx = DOMElements.canvas.getContext('2d');
 
@@ -557,14 +558,14 @@
 
         /** Represents a tank (player or enemy). */
         class Tank {
-            constructor(x, y, color) {
+            constructor(x, y, color, isPlayer = false) {
                 this.x = x;
                 this.y = y;
                 this.size = TANK_SIZE;
                 this.color = color;
                 this.health = 100;
                 this.alive = true;
-                this.speed = PLAYER_SPEED;
+                this.speed = isPlayer ? PLAYER_SPEED : ENEMY_SPEED;
                 this.dx = 0;
                 this.dy = 0;
                 this.turretAngle = 0; // in radians
@@ -572,30 +573,17 @@
             }
 
             draw() {
-                // Determine glow color based on health or powerup
-                const glowColor = this.color === 'var(--player-color)' ? 'var(--player-color)' : 'var(--enemy-color)';
-                const hitFlashColor = '#ff0000'; // Red glow on hit
-                const powerupFlashColor = '#ffff00'; // Yellow glow for powerups
-
-                // Tank body
                 ctx.save();
                 ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
                 ctx.rotate(this.turretAngle);
+                
+                // Tank body
                 ctx.fillStyle = this.color;
-                ctx.shadowColor = 'transparent'; // Reset shadow for body
                 ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
                 
                 // Draw turret
                 ctx.fillStyle = '#ccc';
                 ctx.fillRect(0, -5, this.size / 2, 10);
-                
-                // Draw glow if flashing
-                if (this.isFlashing) {
-                    ctx.shadowColor = hitFlashColor;
-                    ctx.shadowBlur = 10;
-                    ctx.fillStyle = hitFlashColor;
-                    ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-                }
 
                 ctx.restore();
             }
@@ -608,6 +596,10 @@
                 if (!checkWallCollision(nextX, nextY, this.size, this.size)) {
                     this.x = nextX;
                     this.y = nextY;
+                } else {
+                    // Reverse direction if a collision occurs
+                    if (this.dx !== 0) this.dx = -this.dx;
+                    if (this.dy !== 0) this.dy = -this.dy;
                 }
             }
 
@@ -652,7 +644,7 @@
             draw() {
                 ctx.fillStyle = this.shooter.color;
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
                 ctx.fill();
             }
 
@@ -713,7 +705,7 @@
 
         const resizeCanvas = () => {
             const rect = DOMElements.gameBoard.getBoundingClientRect();
-            let size = Math.min(rect.width, rect.height) - 4;
+            let size = Math.min(rect.width, rect.height);
             DOMElements.canvas.width = DOMElements.canvas.height = Math.floor(size / GRID_SIZE) * GRID_SIZE;
             if (!isGameOver) drawGame();
         };
@@ -721,54 +713,79 @@
         const flashCanvasBorder = (type) => {
             const canvas = DOMElements.canvas;
             if (type === 'hit') {
-                canvas.style.borderColor = 'red';
                 canvas.style.boxShadow = '0 0 20px 5px red';
                 setTimeout(() => {
-                    canvas.style.borderColor = 'var(--player-color)';
                     canvas.style.boxShadow = '0 0 20px 5px var(--player-color)';
                 }, BORDER_FLASH_DURATION);
             } else if (type === 'health') {
-                canvas.style.borderColor = 'var(--powerup-health)';
                 canvas.style.boxShadow = '0 0 20px 5px var(--powerup-health)';
                 setTimeout(() => {
-                    canvas.style.borderColor = 'var(--player-color)';
                     canvas.style.boxShadow = '0 0 20px 5px var(--player-color)';
                 }, BORDER_FLASH_DURATION);
             } else if (type === 'rapid') {
-                canvas.style.borderColor = 'var(--powerup-rapid)';
                 canvas.style.boxShadow = '0 0 20px 5px var(--powerup-rapid)';
                 setTimeout(() => {
-                    canvas.style.borderColor = 'var(--player-color)';
                     canvas.style.boxShadow = '0 0 20px 5px var(--player-color)';
                 }, BORDER_FLASH_DURATION);
             }
         };
 
-        // --- MAZE GENERATION (Simplified) ---
-        const generateLabyrinth = () => {
+        // --- MAZE GENERATION (Recursive Backtracking) ---
+        function generateLabyrinth() {
             walls = [];
             const canvasWidth = DOMElements.canvas.width;
             const canvasHeight = DOMElements.canvas.height;
-            const mazeSizeX = Math.floor(canvasWidth / GRID_SIZE);
-            const mazeSizeY = Math.floor(canvasHeight / GRID_SIZE);
+            const mazeCols = Math.floor(canvasWidth / GRID_SIZE);
+            const mazeRows = Math.floor(canvasHeight / GRID_SIZE);
 
+            // Create a 2D grid
+            let grid = Array(mazeRows).fill(null).map(() => Array(mazeCols).fill(1)); // 1 for wall, 0 for path
+            
             // Outer border walls
-            walls.push(new Wall(0, 0, canvasWidth, CELL_WALL_WIDTH));
-            walls.push(new Wall(0, canvasHeight - CELL_WALL_WIDTH, canvasWidth, CELL_WALL_WIDTH));
-            walls.push(new Wall(0, 0, CELL_WALL_WIDTH, canvasHeight));
-            walls.push(new Wall(canvasWidth - CELL_WALL_WIDTH, 0, CELL_WALL_WIDTH, canvasHeight));
+            for (let i = 0; i < mazeCols; i++) {
+                walls.push(new Wall(i * GRID_SIZE, 0, GRID_SIZE, CELL_WALL_WIDTH));
+                walls.push(new Wall(i * GRID_SIZE, canvasHeight - CELL_WALL_WIDTH, GRID_SIZE, CELL_WALL_WIDTH));
+            }
+            for (let i = 0; i < mazeRows; i++) {
+                walls.push(new Wall(0, i * GRID_SIZE, CELL_WALL_WIDTH, GRID_SIZE));
+                walls.push(new Wall(canvasWidth - CELL_WALL_WIDTH, i * GRID_SIZE, CELL_WALL_WIDTH, GRID_SIZE));
+            }
 
-            // Interior walls
-            for (let i = 1; i < mazeSizeX - 1; i++) {
-                for (let j = 1; j < mazeSizeY - 1; j++) {
-                    if (Math.random() < 0.2) { // 20% chance to place a wall segment
-                        const x = i * GRID_SIZE + (Math.random() * (GRID_SIZE - CELL_WALL_WIDTH));
-                        const y = j * GRID_SIZE + (Math.random() * (GRID_SIZE - CELL_WALL_WIDTH));
-                        const isHorizontal = Math.random() > 0.5;
-                        if (isHorizontal) {
-                            walls.push(new Wall(x, y, GRID_SIZE, CELL_WALL_WIDTH));
+            // Recursive backtracking function
+            function carvePath(x, y) {
+                grid[y][x] = 0;
+                const directions = [[0, 1], [0, -1], [1, 0], [-1, 0]];
+                directions.sort(() => Math.random() - 0.5);
+
+                for (const [dx, dy] of directions) {
+                    const nx = x + dx * 2;
+                    const ny = y + dy * 2;
+                    if (ny >= 0 && ny < mazeRows && nx >= 0 && nx < mazeCols && grid[ny][nx] === 1) {
+                        const wallX = x + dx;
+                        const wallY = y + dy;
+                        grid[wallY][wallX] = 0; // Remove the wall
+                        carvePath(nx, ny);
+                    }
+                }
+            }
+
+            carvePath(1, 1);
+
+            // Convert grid to wall objects
+            for (let y = 0; y < mazeRows; y++) {
+                for (let x = 0; x < mazeCols; x++) {
+                    if (grid[y][x] === 1) {
+                        // Check if it's a vertical or horizontal wall segment
+                        const isVertical = y + 1 < mazeRows && grid[y+1][x] === 1;
+                        const isHorizontal = x + 1 < mazeCols && grid[y][x+1] === 1;
+
+                        if (isVertical) {
+                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, CELL_WALL_WIDTH, GRID_SIZE));
+                        } else if (isHorizontal) {
+                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, CELL_WALL_WIDTH));
                         } else {
-                            walls.push(new Wall(x, y, CELL_WALL_WIDTH, GRID_SIZE));
+                            // Single point wall
+                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, CELL_WALL_WIDTH, CELL_WALL_WIDTH));
                         }
                     }
                 }
@@ -821,6 +838,7 @@
             updateElementVisibility(DOMElements.gameOverScreen, false);
             updateElementVisibility(DOMElements.pausedScreen, false);
             updateElementVisibility(DOMElements.layoutEditor.overlay, false);
+            updateElementVisibility(DOMElements.pauseButton, true);
 
             const isDesktop = mode === 'desktop';
             DOMElements.mainContainer.classList.toggle('full-screen-game', isDesktop);
@@ -829,7 +847,6 @@
             
             if (mode === 'mobile') {
                 layoutManager.apply();
-                updateElementVisibility(DOMElements.scoreboardAndHealth, true); // Ensure scoreboard is visible in mobile mode
             }
 
             setTimeout(() => {
@@ -853,24 +870,38 @@
             isGameOver = false;
             gamePaused = false;
             ctx.clearRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
-            playerTank = new Tank(GRID_SIZE * 2, GRID_SIZE * 2, 'var(--player-color)');
+            
+            generateLabyrinth();
+
+            // Find a valid spawn point for the player
+            let playerX, playerY;
+            let isValidPosition = false;
+            while (!isValidPosition) {
+                playerX = (Math.floor(Math.random() * (DOMElements.canvas.width / GRID_SIZE - 2)) + 1) * GRID_SIZE + (GRID_SIZE - TANK_SIZE) / 2;
+                playerY = (Math.floor(Math.random() * (DOMElements.canvas.height / GRID_SIZE - 2)) + 1) * GRID_SIZE + (GRID_SIZE - TANK_SIZE) / 2;
+                if (!checkWallCollision(playerX, playerY, TANK_SIZE, TANK_SIZE)) {
+                    isValidPosition = true;
+                }
+            }
+
+            playerTank = new Tank(playerX, playerY, 'var(--player-color)', true);
             enemies = [];
             bullets = [];
             powerups = [];
-            generateLabyrinth();
+            lastPowerupSpawnTime = Date.now();
 
             // Spawn enemies
             const numEnemies = currentLevel * 2;
             for (let i = 0; i < numEnemies; i++) {
                 let enemyX, enemyY;
-                let isValidPosition = false;
-                while (!isValidPosition) {
-                    enemyX = Math.random() * (DOMElements.canvas.width - TANK_SIZE);
-                    enemyY = Math.random() * (DOMElements.canvas.height - TANK_SIZE);
+                let enemyIsValidPosition = false;
+                while (!enemyIsValidPosition) {
+                    enemyX = (Math.floor(Math.random() * (DOMElements.canvas.width / GRID_SIZE - 2)) + 1) * GRID_SIZE + (GRID_SIZE - TANK_SIZE) / 2;
+                    enemyY = (Math.floor(Math.random() * (DOMElements.canvas.height / GRID_SIZE - 2)) + 1) * GRID_SIZE + (GRID_SIZE - TANK_SIZE) / 2;
                     // Check for collision with player and walls
                     if (!checkWallCollision(enemyX, enemyY, TANK_SIZE, TANK_SIZE) &&
                         Math.abs(enemyX - playerTank.x) > 100 && Math.abs(enemyY - playerTank.y) > 100) {
-                        isValidPosition = true;
+                        enemyIsValidPosition = true;
                     }
                 }
                 const enemy = new Tank(enemyX, enemyY, 'var(--enemy-color)');
@@ -888,21 +919,25 @@
 
             // Player logic
             playerTank.move();
-
-            // Turret rotation
-            if (turretButtonHeld && DOMElements.upBtn.pressed) playerTank.turretAngle -= 0.05;
-            if (turretButtonHeld && DOMElements.downBtn.pressed) playerTank.turretAngle += 0.05;
-            if (turretButtonHeld && DOMElements.leftBtn.pressed) playerTank.turretAngle -= 0.05; // Left/Right change for horizontal movement
-            if (turretButtonHeld && DOMElements.rightBtn.pressed) playerTank.turretAngle += 0.05;
+            
+            // Player turret rotation
+            if (turretButtonHeld) {
+                if (DOMElements.upBtn.pressed) playerTank.turretAngle = -Math.PI / 2;
+                if (DOMElements.downBtn.pressed) playerTank.turretAngle = Math.PI / 2;
+                if (DOMElements.leftBtn.pressed) playerTank.turretAngle = Math.PI;
+                if (DOMElements.rightBtn.pressed) playerTank.turretAngle = 0;
+            }
 
             // Enemies logic
             enemies.forEach(enemy => {
                 if (enemy.alive) {
-                    // Simple AI: roam randomly and fire at player
-                    if (Math.random() < 0.02) {
-                        enemy.dx = (Math.random() - 0.5) * enemy.speed;
-                        enemy.dy = (Math.random() - 0.5) * enemy.speed;
-                    }
+                    // Simple AI: target player's location
+                    const dx = playerTank.x - enemy.x;
+                    const dy = playerTank.y - enemy.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    enemy.dx = (dx / dist) * enemy.speed;
+                    enemy.dy = (dy / dist) * enemy.speed;
+
                     enemy.move();
                     enemy.turretAngle = Math.atan2(playerTank.y - enemy.y, playerTank.x - enemy.x);
                     if (Date.now() - lastEnemyFireTime > 2000) {
@@ -1032,6 +1067,7 @@
             isGameOver = true;
             clearInterval(gameLoopId);
             updateElementVisibility(DOMElements.gameOverScreen, true);
+            updateElementVisibility(DOMElements.pauseButton, false);
             document.getElementById('gameOverMessage').textContent = message;
             document.getElementById('winnerMessage').textContent = subMessage;
             
@@ -1144,11 +1180,12 @@
                 const layout = {};
                 elements.forEach(el => {
                     const rect = el.getBoundingClientRect();
+                    const parentRect = el.parentElement.getBoundingClientRect();
                     layout[el.id] = {
-                        x: rect.left,
-                        y: rect.top,
-                        width: el.style.width ? rect.width : null,
-                        height: el.style.height ? rect.height : null,
+                        x: rect.left - parentRect.left,
+                        y: rect.top - parentRect.top,
+                        width: rect.width,
+                        height: rect.height,
                     };
                 });
                 localStorage.setItem('mobileLayout', JSON.stringify(layout));
@@ -1188,6 +1225,7 @@
             startResize: (e) => {
                 if (!DOMElements.layoutEditor.overlay.classList.contains('hidden')) {
                     e.preventDefault();
+                    e.stopPropagation(); // Prevent drag from starting
                     layoutManager.isResizing = true;
                     layoutManager.activeEl = e.target.closest('.draggable');
                     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -1265,8 +1303,9 @@
                 layoutManager.save();
                 DOMElements.mainContainer.classList.remove('layout-editor-mode');
                 controls.forEach(c => c.style.pointerEvents = 'none');
-                updateElementVisibility(DOMElements.layoutEditor.overlay, true);
+                updateElementVisibility(DOMElements.layoutEditor.overlay, false);
                 updateElementVisibility(DOMElements.pausedScreen, true);
+                resumeGame();
             };
             document.getElementById('reset-layout-btn').onclick = () => {
                 layoutManager.reset();
@@ -1276,6 +1315,7 @@
                 controls.forEach(c => c.style.pointerEvents = 'none');
                 updateElementVisibility(DOMElements.layoutEditor.overlay, false);
                 updateElementVisibility(DOMElements.pausedScreen, true);
+                resumeGame();
             };
         });
 
@@ -1284,34 +1324,36 @@
                 playerTank.fire();
             }
         });
-        document.getElementById('turret-btn').addEventListener('mousedown', () => {
-            turretButtonHeld = true;
-        });
-        document.getElementById('turret-btn').addEventListener('mouseup', () => {
-            turretButtonHeld = false;
-        });
         
         // Touch events for mobile buttons
         document.querySelectorAll('#dpad-container button').forEach(button => {
             button.pressed = false;
-            button.addEventListener('touchstart', (e) => {
+            const handleStart = (e) => {
                 e.preventDefault();
                 button.pressed = true;
                 if (!turretButtonHeld) {
-                    // Handle movement when turret button is NOT held
                     if (button.id === 'up-btn') { playerTank.dx = 0; playerTank.dy = -PLAYER_SPEED; }
                     if (button.id === 'down-btn') { playerTank.dx = 0; playerTank.dy = PLAYER_SPEED; }
                     if (button.id === 'left-btn') { playerTank.dx = -PLAYER_SPEED; playerTank.dy = 0; }
                     if (button.id === 'right-btn') { playerTank.dx = PLAYER_SPEED; playerTank.dy = 0; }
+                } else {
+                    if (button.id === 'up-btn') playerTank.turretAngle = -Math.PI / 2;
+                    if (button.id === 'down-btn') playerTank.turretAngle = Math.PI / 2;
+                    if (button.id === 'left-btn') playerTank.turretAngle = Math.PI;
+                    if (button.id === 'right-btn') playerTank.turretAngle = 0;
                 }
-            });
-            button.addEventListener('touchend', () => {
+            };
+            const handleEnd = () => {
                 button.pressed = false;
                 if (!turretButtonHeld) {
                     playerTank.dx = 0;
                     playerTank.dy = 0;
                 }
-            });
+            };
+            button.addEventListener('touchstart', handleStart);
+            button.addEventListener('touchend', handleEnd);
+            button.addEventListener('mousedown', handleStart);
+            button.addEventListener('mouseup', handleEnd);
         });
 
         document.getElementById('pauseButton').addEventListener('click', pauseGame);
