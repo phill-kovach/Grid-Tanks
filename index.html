@@ -680,22 +680,9 @@
         };
         
         const checkWallCollision = (x, y, width, height) => {
-            const mazeX = Math.floor(x / GRID_SIZE);
-            const mazeY = Math.floor(y / GRID_SIZE);
-            const mazeWidth = Math.floor(DOMElements.canvas.width / GRID_SIZE);
-            const mazeHeight = Math.floor(DOMElements.canvas.height / GRID_SIZE);
-
-            if (mazeY < 0 || mazeY >= mazeHeight || mazeX < 0 || mazeX >= mazeWidth) return true;
-
-            const nextX = Math.floor((x + width / 2) / GRID_SIZE);
-            const nextY = Math.floor((y + height / 2) / GRID_SIZE);
-
-            if (maze[nextY] && maze[nextY][nextX] && maze[nextY][nextX].isWall) {
-                return true;
-            }
-
             // Check if tank's bounding box collides with any wall line
             for (let wall of walls) {
+                // Approximate collision for horizontal and vertical walls
                 if (wall.x1 === wall.x2) { // Vertical wall
                     if (x + width > wall.x1 - WALL_WIDTH && x < wall.x1 + WALL_WIDTH && y + height > wall.y1 && y < wall.y2) {
                         return true;
@@ -706,7 +693,6 @@
                     }
                 }
             }
-
             return false;
         };
 
@@ -717,12 +703,12 @@
         const updateHealthBar = () => {
             const healthPercentage = playerTank.health;
             DOMElements.healthMeterBar.style.width = `${healthPercentage}%`;
-            DOMEElements.healthMeterBar.style.backgroundColor = healthPercentage > 50 ? 'var(--player-color)' :
+            DOMElements.healthMeterBar.style.backgroundColor = healthPercentage > 50 ? 'var(--player-color)' :
                 healthPercentage > 20 ? 'var(--powerup-rapid)' : 'red';
         };
 
         const resizeCanvas = () => {
-            const rect = DOMEElements.gameBoard.getBoundingClientRect();
+            const rect = DOMElements.gameBoard.getBoundingClientRect();
             let size = Math.min(rect.width, rect.height);
             DOMElements.canvas.width = DOMElements.canvas.height = Math.floor(size / GRID_SIZE) * GRID_SIZE;
             if (!isGameOver) drawGame();
@@ -743,32 +729,23 @@
         };
 
         // --- MAZE GENERATION (Reference Image) ---
-        let maze = [];
         function generateLabyrinth() {
             walls = [];
             const mazeCols = Math.floor(DOMElements.canvas.width / GRID_SIZE);
             const mazeRows = Math.floor(DOMElements.canvas.height / GRID_SIZE);
 
-            maze = Array(mazeRows).fill(null).map(() => Array(mazeCols).fill(0));
-
             // Create a simple grid maze by randomly adding walls
-            for (let y = 0; y < mazeRows; y++) {
-                for (let x = 0; x < mazeCols; x++) {
-                    // Chance to create a wall
-                    if (Math.random() > 0.7 && y > 0 && y < mazeRows - 1 && x > 0 && x < mazeCols - 1) {
-                         if (Math.random() > 0.5) {
-                            // horizontal
-                            if (x + 1 < mazeCols && maze[y][x+1] === 0) {
-                                maze[y][x] = 1;
-                                walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, (x+1) * GRID_SIZE, y * GRID_SIZE));
-                            }
-                         } else {
-                            // vertical
-                            if (y + 1 < mazeRows && maze[y+1][x] === 0) {
-                                maze[y][x] = 1;
-                                walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, x * GRID_SIZE, (y+1) * GRID_SIZE));
-                            }
-                         }
+            for (let y = 1; y < mazeRows - 1; y++) {
+                for (let x = 1; x < mazeCols - 1; x++) {
+                    // Chance to create a horizontal or vertical wall segment
+                    if (Math.random() > 0.8) {
+                        if (Math.random() > 0.5) {
+                            // horizontal wall
+                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, (x + 1) * GRID_SIZE, y * GRID_SIZE));
+                        } else {
+                            // vertical wall
+                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, x * GRID_SIZE, (y + 1) * GRID_SIZE));
+                        }
                     }
                 }
             }
@@ -915,9 +892,9 @@
             // Player turret rotation
             if (turretButtonHeld) {
                 if (DOMElements.upBtn.pressed) playerTank.turretAngle = -Math.PI / 2;
-                if (DOMEElements.downBtn.pressed) playerTank.turretAngle = Math.PI / 2;
+                if (DOMElements.downBtn.pressed) playerTank.turretAngle = Math.PI / 2;
                 if (DOMElements.leftBtn.pressed) playerTank.turretAngle = Math.PI;
-                if (DOMEElements.rightBtn.pressed) playerTank.turretAngle = 0;
+                if (DOMElements.rightBtn.pressed) playerTank.turretAngle = 0;
             }
 
             // Enemies logic
