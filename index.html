@@ -26,6 +26,7 @@
             --text-color: #e0e0e0;
             --powerup-rapid: #e8a04f;
             --powerup-health: #26b24d;
+            --wall-color: #00c0c0;
         }
 
         /* General Body and HTML styles */
@@ -485,7 +486,6 @@
         const BULLET_SIZE = 8;
         const MAZE_SIZE = 15; // Number of cells for the maze (MAZE_SIZE x MAZE_SIZE)
         const FPS = 60;
-        const WALL_WIDTH = 4;
         const PLAYER_SPEED = 2;
         const ENEMY_SPEED = 1;
         const BULLET_SPEED = 5;
@@ -493,6 +493,7 @@
         const POWERUP_DURATION = 10000; // in milliseconds
         const HIT_FLASH_DURATION = 500; // in milliseconds
         const BORDER_FLASH_DURATION = 200; // in milliseconds
+        const WALL_WIDTH = 4; // Width of the wall lines
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
@@ -510,6 +511,7 @@
         let lastEnemyFireTime = 0;
         let turretButtonHeld = false;
         let currentMode = 'desktop';
+        let colors = {}; // To store computed CSS colors
 
         // --- DOM ELEMENT CACHE ---
         const DOMElements = {
@@ -547,11 +549,11 @@
 
         /** Represents a wall segment in the labyrinth. */
         class Wall {
-            constructor(x1, y1, x2, y2) {
-                this.x1 = x1;
-                this.y1 = y1;
-                this.x2 = x2;
-                this.y2 = y2;
+            constructor(x, y, width, height) {
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
             }
         }
 
@@ -590,7 +592,7 @@
                 let nextY = this.y + this.dy;
 
                 // Collision detection with walls
-                if (!checkWallCollision(nextX, nextY, this.size, this.size)) {
+                if (!checkWallCollision({x: nextX, y: nextY, width: this.size, height: this.size})) {
                     this.x = nextX;
                     this.y = nextY;
                 } else {
@@ -658,7 +660,7 @@
                 this.y = y;
                 this.size = GRID_SIZE / 2;
                 this.type = type;
-                this.color = type === 'rapid' ? 'var(--powerup-rapid)' : 'var(--powerup-health)';
+                this.color = type === 'rapid' ? colors.powerupRapid : colors.powerupHealth;
             }
 
             draw() {
@@ -672,25 +674,29 @@
         // --- UTILITY FUNCTIONS ---
         const updateElementVisibility = (el, isVisible) => el?.classList.toggle('hidden', !isVisible);
 
-        const checkCollision = (obj1, obj2) => {
-            return obj1.x < obj2.x + obj2.size &&
-                   obj1.x + obj1.size > obj2.x &&
-                   obj1.y < obj2.y + obj2.size &&
-                   obj1.y + obj1.size > obj2.y;
+        /**
+         * Retrieves the computed value of a CSS variable.
+         * @param {string} name The name of the CSS variable (e.g., '--player-color').
+         * @returns {string} The computed color value.
+         */
+        const getComputedColor = (name) => {
+            if (colors[name]) return colors[name];
+            const color = getComputedStyle(document.documentElement).getPropertyValue(name);
+            colors[name] = color;
+            return color;
         };
         
-        const checkWallCollision = (x, y, width, height) => {
-            // Check if tank's bounding box collides with any wall line
+        const checkCollision = (obj1, obj2) => {
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + obj1.width > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + obj1.height > obj2.y;
+        };
+
+        const checkWallCollision = (rect) => {
             for (let wall of walls) {
-                // Approximate collision for horizontal and vertical walls
-                if (wall.x1 === wall.x2) { // Vertical wall
-                    if (x + width > wall.x1 - WALL_WIDTH && x < wall.x1 + WALL_WIDTH && y + height > wall.y1 && y < wall.y2) {
-                        return true;
-                    }
-                } else if (wall.y1 === wall.y2) { // Horizontal wall
-                    if (y + height > wall.y1 - WALL_WIDTH && y < wall.y1 + WALL_WIDTH && x + width > wall.x1 && x < wall.x2) {
-                        return true;
-                    }
+                if (checkCollision(rect, wall)) {
+                    return true;
                 }
             }
             return false;
@@ -703,8 +709,8 @@
         const updateHealthBar = () => {
             const healthPercentage = playerTank.health;
             DOMElements.healthMeterBar.style.width = `${healthPercentage}%`;
-            DOMElements.healthMeterBar.style.backgroundColor = healthPercentage > 50 ? 'var(--player-color)' :
-                healthPercentage > 20 ? 'var(--powerup-rapid)' : 'red';
+            DOMElements.healthMeterBar.style.backgroundColor = healthPercentage > 50 ? getComputedColor('--player-color') :
+                healthPercentage > 20 ? getComputedColor('--powerup-rapid') : 'red';
         };
 
         const resizeCanvas = () => {
@@ -717,47 +723,41 @@
         const flashCanvasBorder = (type) => {
             const canvas = DOMElements.canvas;
             if (type === 'hit') {
-                canvas.style.boxShadow = '0 0 20px 5px red';
+                canvas.style.boxShadow = `0 0 20px 5px red`;
             } else if (type === 'health') {
-                canvas.style.boxShadow = '0 0 20px 5px var(--powerup-health)';
+                canvas.style.boxShadow = `0 0 20px 5px ${getComputedColor('--powerup-health')}`;
             } else if (type === 'rapid') {
-                canvas.style.boxShadow = '0 0 20px 5px var(--powerup-rapid)';
+                canvas.style.boxShadow = `0 0 20px 5px ${getComputedColor('--powerup-rapid')}`;
             }
             setTimeout(() => {
-                canvas.style.boxShadow = '0 0 20px 5px var(--player-color)';
+                canvas.style.boxShadow = `0 0 20px 5px ${getComputedColor('--player-color')}`;
             }, BORDER_FLASH_DURATION);
         };
-
-        // --- MAZE GENERATION (Reference Image) ---
+        
+        // --- MAZE GENERATION ---
         function generateLabyrinth() {
             walls = [];
             const mazeCols = Math.floor(DOMElements.canvas.width / GRID_SIZE);
             const mazeRows = Math.floor(DOMElements.canvas.height / GRID_SIZE);
+            
+            // Outer border
+            walls.push(new Wall(0, 0, DOMElements.canvas.width, WALL_WIDTH));
+            walls.push(new Wall(0, DOMElements.canvas.height - WALL_WIDTH, DOMElements.canvas.width, WALL_WIDTH));
+            walls.push(new Wall(0, 0, WALL_WIDTH, DOMElements.canvas.height));
+            walls.push(new Wall(DOMElements.canvas.width - WALL_WIDTH, 0, WALL_WIDTH, DOMElements.canvas.height));
 
-            // Create a simple grid maze by randomly adding walls
-            for (let y = 1; y < mazeRows - 1; y++) {
-                for (let x = 1; x < mazeCols - 1; x++) {
-                    // Chance to create a horizontal or vertical wall segment
+            // Generate a simple grid maze
+            for (let y = 1; y < mazeRows; y++) {
+                for (let x = 1; x < mazeCols; x++) {
                     if (Math.random() > 0.8) {
+                        // Create a vertical or horizontal wall segment
                         if (Math.random() > 0.5) {
-                            // horizontal wall
-                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, (x + 1) * GRID_SIZE, y * GRID_SIZE));
+                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, WALL_WIDTH));
                         } else {
-                            // vertical wall
-                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, x * GRID_SIZE, (y + 1) * GRID_SIZE));
+                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, WALL_WIDTH, GRID_SIZE));
                         }
                     }
                 }
-            }
-
-            // Create outer border
-            for (let x = 0; x < mazeCols; x++) {
-                walls.push(new Wall(x * GRID_SIZE, 0, (x + 1) * GRID_SIZE, 0));
-                walls.push(new Wall(x * GRID_SIZE, (mazeRows) * GRID_SIZE, (x + 1) * GRID_SIZE, (mazeRows) * GRID_SIZE));
-            }
-            for (let y = 0; y < mazeRows; y++) {
-                walls.push(new Wall(0, y * GRID_SIZE, 0, (y + 1) * GRID_SIZE));
-                walls.push(new Wall(mazeCols * GRID_SIZE, y * GRID_SIZE, mazeCols * GRID_SIZE, (y + 1) * GRID_SIZE));
             }
         };
 
@@ -808,7 +808,7 @@
             updateElementVisibility(DOMElements.pausedScreen, false);
             updateElementVisibility(DOMElements.layoutEditor.overlay, false);
             updateElementVisibility(DOMElements.pauseButton, true);
-
+            
             const isDesktop = mode === 'desktop';
             DOMElements.mainContainer.classList.toggle('full-screen-game', isDesktop);
             updateElementVisibility(DOMElements.controlsContainer, !isDesktop);
@@ -846,14 +846,14 @@
             let playerX, playerY;
             let isValidPosition = false;
             while (!isValidPosition) {
-                playerX = (Math.floor(Math.random() * (DOMElements.canvas.width / GRID_SIZE - 2)) + 1) * GRID_SIZE + (GRID_SIZE - TANK_SIZE) / 2;
-                playerY = (Math.floor(Math.random() * (DOMElements.canvas.height / GRID_SIZE - 2)) + 1) * GRID_SIZE + (GRID_SIZE - TANK_SIZE) / 2;
-                if (!checkWallCollision(playerX, playerY, TANK_SIZE, TANK_SIZE)) {
+                playerX = (Math.random() * (DOMElements.canvas.width - TANK_SIZE));
+                playerY = (Math.random() * (DOMElements.canvas.height - TANK_SIZE));
+                if (!checkWallCollision({x: playerX, y: playerY, width: TANK_SIZE, height: TANK_SIZE})) {
                     isValidPosition = true;
                 }
             }
 
-            playerTank = new Tank(playerX, playerY, 'var(--player-color)', true);
+            playerTank = new Tank(playerX, playerY, getComputedColor('--player-color'), true);
             enemies = [];
             bullets = [];
             powerups = [];
@@ -865,15 +865,15 @@
                 let enemyX, enemyY;
                 let enemyIsValidPosition = false;
                 while (!enemyIsValidPosition) {
-                    enemyX = (Math.floor(Math.random() * (DOMElements.canvas.width / GRID_SIZE - 2)) + 1) * GRID_SIZE + (GRID_SIZE - TANK_SIZE) / 2;
-                    enemyY = (Math.floor(Math.random() * (DOMElements.canvas.height / GRID_SIZE - 2)) + 1) * GRID_SIZE + (GRID_SIZE - TANK_SIZE) / 2;
+                    enemyX = (Math.random() * (DOMElements.canvas.width - TANK_SIZE));
+                    enemyY = (Math.random() * (DOMElements.canvas.height - TANK_SIZE));
                     // Check for collision with player and walls
-                    if (!checkWallCollision(enemyX, enemyY, TANK_SIZE, TANK_SIZE) &&
+                    if (!checkWallCollision({x: enemyX, y: enemyY, width: TANK_SIZE, height: TANK_SIZE}) &&
                         Math.abs(enemyX - playerTank.x) > 100 && Math.abs(enemyY - playerTank.y) > 100) {
                         enemyIsValidPosition = true;
                     }
                 }
-                const enemy = new Tank(enemyX, enemyY, 'var(--enemy-color)');
+                const enemy = new Tank(enemyX, enemyY, getComputedColor('--enemy-color'));
                 enemy.speed = ENEMY_SPEED + (currentLevel * 0.2);
                 enemies.push(enemy);
             }
@@ -942,7 +942,7 @@
         function checkCollisions() {
             // Bullet-to-wall collisions
             bullets.forEach(bullet => {
-                if (checkWallCollision(bullet.x, bullet.y, bullet.size, bullet.size)) {
+                if (checkWallCollision({x: bullet.x, y: bullet.y, width: bullet.size, height: bullet.size})) {
                     bullet.alive = false;
                 }
             });
@@ -996,7 +996,7 @@
             while (!isValidPosition) {
                 powerupX = Math.random() * (DOMElements.canvas.width - TANK_SIZE);
                 powerupY = Math.random() * (DOMElements.canvas.height - TANK_SIZE);
-                if (!checkWallCollision(powerupX, powerupY, TANK_SIZE, TANK_SIZE)) {
+                if (!checkWallCollision({x: powerupX, y: powerupY, width: TANK_SIZE, height: TANK_SIZE})) {
                     isValidPosition = true;
                 }
             }
@@ -1007,37 +1007,28 @@
             ctx.clearRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
 
             // Draw glowing walls
-            ctx.lineWidth = WALL_WIDTH;
-            ctx.strokeStyle = 'var(--player-color)';
-            ctx.shadowColor = 'var(--player-color)';
+            ctx.fillStyle = getComputedColor('--wall-color');
+            ctx.shadowColor = getComputedColor('--wall-color');
             ctx.shadowBlur = 10;
             walls.forEach(wall => {
-                ctx.beginPath();
-                ctx.moveTo(wall.x1, wall.y1);
-                ctx.lineTo(wall.x2, wall.y2);
-                ctx.stroke();
+                ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
             });
             ctx.shadowBlur = 0;
 
-            // Draw player tank
             // Handle player flash effect
             if (Date.now() - playerHitTime < HIT_FLASH_DURATION) {
-                DOMElements.canvas.style.boxShadow = '0 0 20px 5px red';
+                DOMElements.canvas.style.boxShadow = `0 0 20px 5px red`;
             } else if (Date.now() - powerupFlashTime < POWERUP_DURATION) {
                 // Keep the border flash from the powerup for the duration
             } else {
-                DOMElements.canvas.style.boxShadow = '0 0 20px 5px var(--player-color)';
+                DOMElements.canvas.style.boxShadow = `0 0 20px 5px ${getComputedColor('--player-color')}`;
             }
-            playerTank.draw();
 
-            // Draw enemies
-            enemies.forEach(enemy => enemy.draw());
-
-            // Draw bullets
-            bullets.forEach(bullet => bullet.draw());
-
-            // Draw powerups
-            powerups.forEach(powerup => powerup.draw());
+            // Draw game objects
+            if (playerTank.alive) playerTank.draw();
+            enemies.forEach(enemy => { if(enemy.alive) enemy.draw() });
+            bullets.forEach(bullet => { if(bullet.alive) bullet.draw() });
+            powerups.forEach(powerup => { if(powerup.alive) powerup.draw() });
         }
 
         function endGame(message, subMessage, nextLevel = false) {
@@ -1337,6 +1328,13 @@
 
         // --- INITIALIZATION ---
         async function init() {
+            // Pre-fetch all needed CSS colors
+            getComputedColor('--player-color');
+            getComputedColor('--enemy-color');
+            getComputedColor('--powerup-rapid');
+            getComputedColor('--powerup-health');
+            getComputedColor('--wall-color');
+
             await setupFirebase();
             layoutManager.init();
             window.addEventListener('resize', resizeCanvas);
