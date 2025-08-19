@@ -85,6 +85,25 @@
             border-top: 4px solid var(--dark-bg);
             padding: 1rem 0;
         }
+        
+        /* New styling for mobile to split canvas and controls */
+        .mobile-layout .game-display-section {
+            flex-grow: 0;
+            height: 50%;
+            padding: 0;
+        }
+        
+        .mobile-layout .controls-container {
+            height: 50%;
+            flex-shrink: 0;
+            padding: 1rem 0;
+        }
+        
+        .mobile-layout .mobile-controls-layout {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
 
         /* Canvas container and styling */
         #game-board {
@@ -481,10 +500,9 @@
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- GLOBAL VARIABLES & CONSTANTS ---
-        const GRID_SIZE = 40; // Size of each grid cell for the maze
+        const TILE_SIZE = 40; // Size of each grid cell for the maze
         const TANK_SIZE = 30; // Size of the tank graphic
         const BULLET_SIZE = 8;
-        const MAZE_SIZE_CELLS = 15; // Number of cells for the maze (MAZE_SIZE x MAZE_SIZE)
         const FPS = 60;
         const PLAYER_SPEED = 2;
         const ENEMY_SPEED = 1;
@@ -554,16 +572,6 @@
                 this.y = y;
                 this.width = width;
                 this.height = height;
-            }
-        }
-        
-        /** Represents a cell in the maze for generation. */
-        class Cell {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.visited = false;
-                this.walls = { top: true, right: true, bottom: true, left: true };
             }
         }
 
@@ -672,7 +680,7 @@
             constructor(x, y, type) {
                 this.x = x;
                 this.y = y;
-                this.size = GRID_SIZE / 2;
+                this.size = TILE_SIZE / 2;
                 this.width = this.size;
                 this.height = this.size;
                 this.type = type;
@@ -732,7 +740,7 @@
         const resizeCanvas = () => {
             const rect = DOMElements.gameBoard.getBoundingClientRect();
             let size = Math.min(rect.width, rect.height);
-            DOMElements.canvas.width = DOMElements.canvas.height = Math.floor(size / GRID_SIZE) * GRID_SIZE;
+            DOMElements.canvas.width = DOMElements.canvas.height = Math.floor(size / TILE_SIZE) * TILE_SIZE;
             if (!isGameOver) drawGame();
         };
 
@@ -750,75 +758,33 @@
             }, BORDER_FLASH_DURATION);
         };
         
-        // --- MAZE GENERATION (using Recursive Backtracking) ---
+        // --- MAZE GENERATION (Simplified) ---
         function generateLabyrinth() {
             walls = [];
-            const cols = Math.floor(DOMElements.canvas.width / GRID_SIZE);
-            const rows = Math.floor(DOMElements.canvas.height / GRID_SIZE);
-            
-            // Create a 2D array of Cell objects
-            const grid = new Array(cols).fill(null).map(() => new Array(rows).fill(null));
-            for (let y = 0; y < rows; y++) {
-                for (let x = 0; x < cols; x++) {
-                    grid[x][y] = new Cell(x, y);
-                }
-            }
+            const cols = Math.floor(DOMElements.canvas.width / TILE_SIZE);
+            const rows = Math.floor(DOMElements.canvas.height / TILE_SIZE);
 
-            const stack = [];
-            let current = grid[0][0];
-            current.visited = true;
-            stack.push(current);
+            // Create a simple, static maze pattern
+            const mazePattern = [
+                "################################",
+                "#                              #",
+                "#  #  ####  #  #  ####  #   #  #",
+                "#  #  #     #  #  #     # # #  #",
+                "#  #  ####  #  #  ####  ##  #  #",
+                "#  #  #     #  #  #     #   #  #",
+                "#  #  ####  ####  ####  #   #  #",
+                "#                              #",
+                "################################"
+            ];
 
-            while (stack.length > 0) {
-                current = stack.pop();
-                const neighbors = [];
+            const cellWidth = DOMElements.canvas.width / mazePattern[0].length;
+            const cellHeight = DOMElements.canvas.height / mazePattern.length;
 
-                // Get unvisited neighbors
-                const top = y => grid[x][y-1];
-                const right = x => grid[x+1][y];
-                const bottom = y => grid[x][y+1];
-                const left = x => grid[x-1][y];
-
-                if (current.y > 0 && !grid[current.x][current.y - 1].visited) neighbors.push(grid[current.x][current.y - 1]);
-                if (current.x < cols - 1 && !grid[current.x + 1][current.y].visited) neighbors.push(grid[current.x + 1][current.y]);
-                if (current.y < rows - 1 && !grid[current.x][current.y + 1].visited) neighbors.push(grid[current.x][current.y + 1]);
-                if (current.x > 0 && !grid[current.x - 1][current.y].visited) neighbors.push(grid[current.x - 1][current.y]);
-                
-                if (neighbors.length > 0) {
-                    stack.push(current);
-                    const chosen = neighbors[Math.floor(Math.random() * neighbors.length)];
-                    
-                    // Remove wall between current and chosen cell
-                    if (chosen.x < current.x) { // Chosen is to the left
-                        current.walls.left = false;
-                        chosen.walls.right = false;
-                    } else if (chosen.x > current.x) { // Chosen is to the right
-                        current.walls.right = false;
-                        chosen.walls.left = false;
-                    } else if (chosen.y < current.y) { // Chosen is to the top
-                        current.walls.top = false;
-                        chosen.walls.bottom = false;
-                    } else if (chosen.y > current.y) { // Chosen is to the bottom
-                        current.walls.bottom = false;
-                        chosen.walls.top = false;
+            for (let y = 0; y < mazePattern.length; y++) {
+                for (let x = 0; x < mazePattern[y].length; x++) {
+                    if (mazePattern[y][x] === '#') {
+                        walls.push(new Wall(x * cellWidth, y * cellHeight, cellWidth, cellHeight));
                     }
-
-                    chosen.visited = true;
-                    stack.push(chosen);
-                }
-            }
-
-            // Convert cell walls to Wall objects
-            for (let y = 0; y < rows; y++) {
-                for (let x = 0; x < cols; x++) {
-                    const cell = grid[x][y];
-                    const px = x * GRID_SIZE;
-                    const py = y * GRID_SIZE;
-
-                    if (cell.walls.top) walls.push(new Wall(px, py, GRID_SIZE, WALL_WIDTH));
-                    if (cell.walls.right) walls.push(new Wall(px + GRID_SIZE - WALL_WIDTH, py, WALL_WIDTH, GRID_SIZE));
-                    if (cell.walls.bottom) walls.push(new Wall(px, py + GRID_SIZE - WALL_WIDTH, GRID_SIZE, WALL_WIDTH));
-                    if (cell.walls.left) walls.push(new Wall(px, py, WALL_WIDTH, GRID_SIZE));
                 }
             }
         };
@@ -873,6 +839,7 @@
             
             const isDesktop = mode === 'desktop';
             DOMElements.mainContainer.classList.toggle('full-screen-game', isDesktop);
+            DOMElements.mainContainer.classList.toggle('mobile-layout', !isDesktop);
             updateElementVisibility(DOMElements.controlsContainer, !isDesktop);
             updateElementVisibility(DOMElements.buttonsLayout, mode === 'mobile');
             
@@ -954,7 +921,7 @@
             // Player turret rotation
             if (turretButtonHeld) {
                 if (DOMElements.upBtn.pressed) playerTank.turretAngle = -Math.PI / 2;
-                if (DOMEElements.downBtn.pressed) playerTank.turretAngle = Math.PI / 2;
+                if (DOMElements.downBtn.pressed) playerTank.turretAngle = Math.PI / 2;
                 if (DOMElements.leftBtn.pressed) playerTank.turretAngle = Math.PI;
                 if (DOMElements.rightBtn.pressed) playerTank.turretAngle = 0;
             }
