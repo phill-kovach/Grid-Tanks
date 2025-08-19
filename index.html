@@ -484,7 +484,7 @@
         const GRID_SIZE = 40; // Size of each grid cell for the maze
         const TANK_SIZE = 30; // Size of the tank graphic
         const BULLET_SIZE = 8;
-        const MAZE_SIZE = 15; // Number of cells for the maze (MAZE_SIZE x MAZE_SIZE)
+        const MAZE_SIZE_CELLS = 15; // Number of cells for the maze (MAZE_SIZE x MAZE_SIZE)
         const FPS = 60;
         const PLAYER_SPEED = 2;
         const ENEMY_SPEED = 1;
@@ -556,6 +556,16 @@
                 this.height = height;
             }
         }
+        
+        /** Represents a cell in the maze for generation. */
+        class Cell {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.visited = false;
+                this.walls = { top: true, right: true, bottom: true, left: true };
+            }
+        }
 
         /** Represents a tank (player or enemy). */
         class Tank {
@@ -563,6 +573,8 @@
                 this.x = x;
                 this.y = y;
                 this.size = TANK_SIZE;
+                this.width = TANK_SIZE; // Added for collision detection
+                this.height = TANK_SIZE; // Added for collision detection
                 this.color = color;
                 this.health = 100;
                 this.alive = true;
@@ -576,14 +588,14 @@
             draw() {
                 // Tank body
                 ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.fillRect(this.x, this.y, this.width, this.height);
                 
                 // Draw turret
                 ctx.save();
-                ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
                 ctx.rotate(this.turretAngle);
                 ctx.fillStyle = '#ccc';
-                ctx.fillRect(0, -2, this.size / 2, 4);
+                ctx.fillRect(0, -2, this.width / 2, 4);
                 ctx.restore();
             }
 
@@ -592,7 +604,7 @@
                 let nextY = this.y + this.dy;
 
                 // Collision detection with walls
-                if (!checkWallCollision({x: nextX, y: nextY, width: this.size, height: this.size})) {
+                if (!checkWallCollision({x: nextX, y: nextY, width: this.width, height: this.height})) {
                     this.x = nextX;
                     this.y = nextY;
                 } else {
@@ -604,8 +616,8 @@
 
             fire() {
                 const angle = this.turretAngle;
-                const bulletX = this.x + this.size / 2 + Math.cos(angle) * (this.size / 2 + BULLET_SIZE);
-                const bulletY = this.y + this.size / 2 + Math.sin(angle) * (this.size / 2 + BULLET_SIZE);
+                const bulletX = this.x + this.width / 2 + Math.cos(angle) * (this.width / 2 + BULLET_SIZE);
+                const bulletY = this.y + this.height / 2 + Math.sin(angle) * (this.height / 2 + BULLET_SIZE);
                 bullets.push(new Bullet(bulletX, bulletY, angle, this));
             }
 
@@ -634,6 +646,8 @@
                 this.x = x;
                 this.y = y;
                 this.size = BULLET_SIZE;
+                this.width = BULLET_SIZE; // Added for collision detection
+                this.height = BULLET_SIZE; // Added for collision detection
                 this.speedX = Math.cos(angle) * BULLET_SPEED;
                 this.speedY = Math.sin(angle) * BULLET_SPEED;
                 this.shooter = shooter;
@@ -659,6 +673,8 @@
                 this.x = x;
                 this.y = y;
                 this.size = GRID_SIZE / 2;
+                this.width = this.size;
+                this.height = this.size;
                 this.type = type;
                 this.color = type === 'rapid' ? colors.powerupRapid : colors.powerupHealth;
             }
@@ -734,29 +750,75 @@
             }, BORDER_FLASH_DURATION);
         };
         
-        // --- MAZE GENERATION ---
+        // --- MAZE GENERATION (using Recursive Backtracking) ---
         function generateLabyrinth() {
             walls = [];
-            const mazeCols = Math.floor(DOMElements.canvas.width / GRID_SIZE);
-            const mazeRows = Math.floor(DOMElements.canvas.height / GRID_SIZE);
+            const cols = Math.floor(DOMElements.canvas.width / GRID_SIZE);
+            const rows = Math.floor(DOMElements.canvas.height / GRID_SIZE);
             
-            // Outer border
-            walls.push(new Wall(0, 0, DOMElements.canvas.width, WALL_WIDTH));
-            walls.push(new Wall(0, DOMElements.canvas.height - WALL_WIDTH, DOMElements.canvas.width, WALL_WIDTH));
-            walls.push(new Wall(0, 0, WALL_WIDTH, DOMElements.canvas.height));
-            walls.push(new Wall(DOMElements.canvas.width - WALL_WIDTH, 0, WALL_WIDTH, DOMElements.canvas.height));
+            // Create a 2D array of Cell objects
+            const grid = new Array(cols).fill(null).map(() => new Array(rows).fill(null));
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    grid[x][y] = new Cell(x, y);
+                }
+            }
 
-            // Generate a simple grid maze
-            for (let y = 1; y < mazeRows; y++) {
-                for (let x = 1; x < mazeCols; x++) {
-                    if (Math.random() > 0.8) {
-                        // Create a vertical or horizontal wall segment
-                        if (Math.random() > 0.5) {
-                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, WALL_WIDTH));
-                        } else {
-                            walls.push(new Wall(x * GRID_SIZE, y * GRID_SIZE, WALL_WIDTH, GRID_SIZE));
-                        }
+            const stack = [];
+            let current = grid[0][0];
+            current.visited = true;
+            stack.push(current);
+
+            while (stack.length > 0) {
+                current = stack.pop();
+                const neighbors = [];
+
+                // Get unvisited neighbors
+                const top = y => grid[x][y-1];
+                const right = x => grid[x+1][y];
+                const bottom = y => grid[x][y+1];
+                const left = x => grid[x-1][y];
+
+                if (current.y > 0 && !grid[current.x][current.y - 1].visited) neighbors.push(grid[current.x][current.y - 1]);
+                if (current.x < cols - 1 && !grid[current.x + 1][current.y].visited) neighbors.push(grid[current.x + 1][current.y]);
+                if (current.y < rows - 1 && !grid[current.x][current.y + 1].visited) neighbors.push(grid[current.x][current.y + 1]);
+                if (current.x > 0 && !grid[current.x - 1][current.y].visited) neighbors.push(grid[current.x - 1][current.y]);
+                
+                if (neighbors.length > 0) {
+                    stack.push(current);
+                    const chosen = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    
+                    // Remove wall between current and chosen cell
+                    if (chosen.x < current.x) { // Chosen is to the left
+                        current.walls.left = false;
+                        chosen.walls.right = false;
+                    } else if (chosen.x > current.x) { // Chosen is to the right
+                        current.walls.right = false;
+                        chosen.walls.left = false;
+                    } else if (chosen.y < current.y) { // Chosen is to the top
+                        current.walls.top = false;
+                        chosen.walls.bottom = false;
+                    } else if (chosen.y > current.y) { // Chosen is to the bottom
+                        current.walls.bottom = false;
+                        chosen.walls.top = false;
                     }
+
+                    chosen.visited = true;
+                    stack.push(chosen);
+                }
+            }
+
+            // Convert cell walls to Wall objects
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const cell = grid[x][y];
+                    const px = x * GRID_SIZE;
+                    const py = y * GRID_SIZE;
+
+                    if (cell.walls.top) walls.push(new Wall(px, py, GRID_SIZE, WALL_WIDTH));
+                    if (cell.walls.right) walls.push(new Wall(px + GRID_SIZE - WALL_WIDTH, py, WALL_WIDTH, GRID_SIZE));
+                    if (cell.walls.bottom) walls.push(new Wall(px, py + GRID_SIZE - WALL_WIDTH, GRID_SIZE, WALL_WIDTH));
+                    if (cell.walls.left) walls.push(new Wall(px, py, WALL_WIDTH, GRID_SIZE));
                 }
             }
         };
@@ -892,7 +954,7 @@
             // Player turret rotation
             if (turretButtonHeld) {
                 if (DOMElements.upBtn.pressed) playerTank.turretAngle = -Math.PI / 2;
-                if (DOMElements.downBtn.pressed) playerTank.turretAngle = Math.PI / 2;
+                if (DOMEElements.downBtn.pressed) playerTank.turretAngle = Math.PI / 2;
                 if (DOMElements.leftBtn.pressed) playerTank.turretAngle = Math.PI;
                 if (DOMElements.rightBtn.pressed) playerTank.turretAngle = 0;
             }
@@ -942,7 +1004,7 @@
         function checkCollisions() {
             // Bullet-to-wall collisions
             bullets.forEach(bullet => {
-                if (checkWallCollision({x: bullet.x, y: bullet.y, width: bullet.size, height: bullet.size})) {
+                if (checkWallCollision(bullet)) {
                     bullet.alive = false;
                 }
             });
