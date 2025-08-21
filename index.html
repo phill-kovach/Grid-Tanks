@@ -3,1374 +3,514 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Tanks: Space Paranoids</title>
-    <!-- PWA & iOS Meta Tags -->
-    <link rel="manifest" href="manifest.json">
+    <title>Vector Tanks</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#000000"/>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <!-- Preconnect to font domains for performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Load fonts via <link> tags -->
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/dist/phosphor.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* CSS Variables for a Tron-inspired theme */
-        :root {
-            --player-color: #00c0c0;
-            --enemy-color: #ff6600;
-            --dark-bg: #121212;
-            --medium-bg: #1a1a1a;
-            --light-bg: #1f1f1f;
-            --text-color: #e0e0e0;
-            --powerup-rapid: #e8a04f;
-            --powerup-health: #26b24d;
-            --wall-color: #00c0c0;
-        }
+    <meta name="apple-mobile-web-app-title" content="Vector Tanks">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/000000/00f7ff?text=VT">
+    <link rel="manifest" href="data:application/manifest+json;base64,ew0KICAibmFtZSI6ICJWZWN0b3IgVGFua3MiLA0KICAic2hvcnRfbmFtZSI6ICJWRGFua3MiLA0KICAiaWNvbnMiOiBbDQogICAgew0KICAgICAgInNyYyI6ICJodHRwczovL3BsYWNlaG9sZC5jby8xOTJ4MTkyLzAwMDAwMC8wMGY3ZmY/dGV4dD1WVCIsDQogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsDQogICAgICAidHlwZSI6ICJpbWFnZS9wbmciDQogICAgfSwNCiAgICB7DQogICAgICAic3JjIjogImh0dHBzOi8vcGxhY2Vob2xkLmNvLzUxMng1MTIvMDAwMDAwLzAwZjdmZj90ZXh0PVZUIiwNCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwNCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyINCiAgICB9DQogIF0sDQogICJ0aGVtZV9jb2xvciI6ICIjMDAwMDAwIiwNCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzAwMDAwMCIsDQogICJzdGFydF91cmwiOiAiLiIsDQogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLA0KICAib3JpZW50YXRpb24iOiAibGFuZHNjYXBlIg0KfQ==">
 
-        /* General Body and HTML styles */
-        html, body {
-            height: 100%;
-            width: 100%;
-            margin: 0;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000;
+            color: #00f7ff;
+            font-family: 'VT323', monospace;
             overflow: hidden;
             touch-action: none;
-            font-family: 'VT323', monospace;
-            background-color: var(--dark-bg);
-            color: var(--text-color);
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        /* Main game container layout */
-        .game-container {
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            height: 100vh; /* Use viewport height */
             width: 100vw;
-            position: relative;
-            background-color: var(--dark-bg);
+            font-size: 1.25rem;
         }
-
-        /* Game display section for mobile and desktop */
-        .game-display-section {
-            flex-grow: 1;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 1rem;
-            box-sizing: border-box;
-            position: relative;
-            min-height: 0;
+        .neon-text {
+            text-shadow: 0 0 5px #00f7ff, 0 0 10px #00f7ff, 0 0 20px #00f7ff, 0 0 40px #00f7ff, 0 0 80px #00f7ff;
         }
-
-        /* Full screen game mode for desktop */
-        .full-screen-game .game-display-section {
-            height: 100%;
-            padding: 0;
+        .neon-box {
+            box-shadow: 0 0 5px #00f7ff, 0 0 10px #00f7ff, 0 0 20px #00f7ff inset;
+            border: 2px solid #00f7ff;
         }
-
-        /* Mobile controls container */
-        .controls-container {
-            flex-shrink: 0;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-sizing: border-box;
-            position: relative;
-            background-color: var(--dark-bg);
-            border-top: 4px solid var(--dark-bg);
-            padding: 1rem 0;
+        .neon-button {
+            background-color: #0d1a1a;
+            border: 2px solid #00f7ff;
+            color: #00f7ff;
+            text-shadow: 0 0 5px #00f7ff;
+            box-shadow: 0 0 5px #00f7ff, 0 0 10px #00f7ff;
+            transition: all 0.3s ease;
+        }
+        .neon-button:hover, .neon-button:active {
+            background-color: #00f7ff;
+            color: #000;
+            box-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff, 0 0 40px #00f7ff;
+        }
+        .health-bar-inner {
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
+            box-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00;
         }
         
-        /* New styling for mobile to split canvas and controls */
-        .mobile-layout .game-display-section {
-            flex-grow: 0;
-            height: 50%;
-            padding: 0;
-        }
-        
-        .mobile-layout .controls-container {
+        /* Mobile Layout Split */
+        body.mobile-layout #canvasContainer {
             height: 50%;
             flex-shrink: 0;
-            padding: 1rem 0;
         }
-        
-        .mobile-layout .mobile-controls-layout {
-            position: relative;
-            width: 100%;
-            height: 100%;
+        body.mobile-layout #mobileControlsContainer {
+            height: 50%;
+            display: block;
         }
 
-        /* Canvas container and styling */
-        #game-board {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            box-sizing: border-box;
-        }
-
-        #gameCanvas {
-            background-color: #000;
-            box-shadow: 0 0 20px 5px var(--player-color);
-            transition: all 0.5s ease-in-out;
-            border-radius: 8px;
-        }
-
-        /* Overlays for menus and messages */
-        .game-overlay {
+        #mobileControls .d-pad, #mobileControls .action-buttons {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            text-align: center;
-            transition: opacity 0.5s ease-in-out;
-            z-index: 20;
+            transform: scale(var(--control-scale, 1));
+            opacity: var(--control-opacity, 0.7);
+            transition: outline .2s;
+        }
+        .is-adjusting .d-pad, .is-adjusting .action-buttons {
+            outline: 2px dashed #ff00ff;
+            cursor: move;
         }
 
-        .game-overlay-content {
-            background-color: rgba(18, 18, 18, 0.9);
-            padding: 2rem 3rem;
-            border-radius: 12px;
-            border: 2px solid var(--player-color);
-            box-shadow: 0 0 15px var(--player-color);
-            animation: fadeIn 1s ease-in-out;
-        }
-
-        /* Text and button styling within overlays */
-        .game-overlay-content h1 {
-            font-size: 3rem;
-            font-weight: 700;
-            color: var(--player-color);
-            margin-bottom: 1rem;
-            text-shadow: 0 0 10px var(--player-color);
-        }
-
-        .game-overlay-content h2 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            color: #ffffff;
-        }
-
-        .game-overlay-content p {
-            font-size: 1.5rem;
-            margin-bottom: 2.5rem;
-            line-height: 1.6;
-        }
-
-        .game-button {
-            padding: 0.75rem 2.5rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--dark-bg);
-            background-color: var(--player-color);
-            border: none;
-            border-radius: 9999px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 192, 192, 0.5);
-            transition: all 0.2s ease-in-out;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0.5rem;
-        }
-
-        .game-button:hover {
-            background-color: #00e0e0;
-            box-shadow: 0 6px 18px rgba(0, 192, 192, 0.7);
-            transform: translateY(-2px);
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Scoreboard and health bar */
-        #scoreboard-and-health {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            border: 2px solid var(--player-color);
-            border-bottom: none;
-            border-radius: 8px 8px 0 0;
-            padding: 0.5rem;
-            box-shadow: 0 0 10px var(--player-color);
-            background-color: rgba(18, 18, 18, 0.8);
-            z-index: 5;
-            left: 50%;
-            top: 2rem;
-            transform: translateX(-50%);
-        }
-
-        .score-container {
-            display: flex;
-            justify-content: center;
-            font-size: 1.2rem;
-            font-weight: 700;
-            white-space: nowrap;
-            gap: 1rem;
-        }
-
-        #health-meter-container {
-            width: 150px;
-            height: 6px;
-            background-color: #333;
-            border-radius: 5px;
-            border: 1px solid #555;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-
-        #health-meter-bar {
-            width: 100%;
-            height: 100%;
-            background-color: var(--player-color);
-            border-radius: 5px;
-            transition: width 0.1s linear;
-        }
-
-        #countdown-display {
-            font-size: 10rem;
-            font-weight: bold;
+        .d-pad button, .action-buttons button {
+            background-color: rgba(128, 128, 128, 0.3);
+            border: 2px solid #555;
             color: white;
-            text-shadow: 0 0 20px var(--player-color);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            transition: background-color 0.2s;
         }
-
-        /* Mobile controls layout */
-        .mobile-controls-layout {
+        .d-pad button:active, .action-buttons button:active {
+            background-color: rgba(128, 128, 128, 0.7);
+        }
+        .action-buttons .button-a {
+            background-color: rgba(255, 0, 255, 0.5);
+        }
+        .action-buttons .button-b {
+            background-color: rgba(255, 0, 255, 0.5);
+        }
+        #gameCanvas {
+            box-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff, 0 0 30px #00f7ff, 0 0 40px #00f7ff;
+            border: 2px solid #00f7ff;
+            transition: box-shadow 0.1s ease-in-out, border-color 0.1s ease-in-out;
+        }
+        .modal {
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+        #controlAdjustModal {
             position: absolute;
             top: 0;
             left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 60;
+        }
+        input[type=range] {
+            -webkit-appearance: none;
             width: 100%;
-            height: 100%;
-            pointer-events: none;
+            background: transparent;
         }
-
-        .draggable {
-            position: absolute;
-            cursor: grab;
-            transition: none !important;
-            pointer-events: auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -khtml-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        .draggable:active {
-            cursor: grabbing;
-        }
-
-        .layout-editor-mode .draggable {
-            outline: 2px dashed var(--player-color);
-            background-color: rgba(0, 192, 192, 0.1);
-        }
-
-        .resize-handle {
-            position: absolute;
-            right: -10px;
-            bottom: -10px;
-            width: 20px;
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
             height: 20px;
-            background-color: var(--player-color);
-            border: 2px solid white;
+            width: 20px;
             border-radius: 50%;
-            cursor: se-resize;
-            pointer-events: auto;
-        }
-
-        #dpad-container {
-            display: grid;
-            grid-template-areas: ". up ." "left . right" ". down .";
-            gap: 16px;
-            place-items: center;
-        }
-
-        #dpad-container button {
-            border-radius: 8px;
-            background-color: #002222;
-            border: 2px solid #0ff;
-            box-shadow: 0 0 8px #0ff;
-            color: #0ff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: #00f7ff;
             cursor: pointer;
-            transition: all 0.1s ease;
-            width: 60px;
-            height: 60px;
-            font-size: 1.5rem;
+            margin-top: -8px;
+            box-shadow: 0 0 10px #00f7ff;
         }
-
-        #dpad-container button.up { grid-area: up; }
-        #dpad-container button.down { grid-area: down; }
-        #dpad-container button.left { grid-area: left; }
-        #dpad-container button.right { grid-area: right; }
-
-        #action-controls-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .action-btn {
-            border-radius: 50%;
-            width: 75px;
-            height: 75px;
-            background-color: #002222;
-            border: 2px solid #0ff;
-            box-shadow: 0 0 8px #0ff;
-            color: #0ff;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-weight: 700;
-            transition: all 0.1s ease;
-            line-height: 1;
-            font-size: 10px;
-            gap: 4px;
-        }
-        
-        #pauseButton {
-            position: absolute;
-            top: 1rem;
-            left: 1rem;
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            background-color: rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--player-color);
-            color: var(--player-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            z-index: 10;
-        }
-
-        .ph { font-family: 'Phosphor-Regular', sans-serif; line-height: 1; }
-
-        /* Layout editor UI */
-        #layout-editor-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
+        input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            text-align: center;
-            z-index: 30;
-            pointer-events: none;
+            height: 4px;
+            cursor: pointer;
+            background: #00f7ff;
+            border-radius: 2px;
         }
 
-        .layout-editor-controls {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            display: flex;
-            gap: 1rem;
-            pointer-events: auto;
-        }
-
-        .layout-editor-text {
-            color: var(--player-color);
-            font-size: 1.5rem;
-            text-shadow: 0 0 5px var(--player-color);
-            margin-bottom: 2rem;
-            pointer-events: none;
+        /* Mobile Font Size Adjustment */
+        @media (max-width: 767px) {
+            #gameUI {
+                font-size: 0.875rem; /* Smaller font for mobile UI */
+            }
         }
     </style>
 </head>
-<body>
-    <div id="main-game-container" class="game-container">
-        <!-- Game display section -->
-        <div id="game-display-section" class="game-display-section">
-            <!-- Scoreboard and health -->
-            <div id="scoreboard-and-health">
-                <div class="score-container">
-                    <span class="user-score">Score: <span id="userScore">0</span></span>
-                </div>
-                <div id="health-meter-container">
-                    <div id="health-meter-bar"></div>
-                </div>
-            </div>
-            <button id="pauseButton" class="hidden"><i class="ph ph-pause"></i></button>
+<body class="p-2">
 
-            <div id="game-board"><canvas id="gameCanvas"></canvas></div>
-            <!-- Game Menus -->
-            <div id="gameMenu" class="game-overlay">
-                <div class="game-overlay-content">
-                    <h1>TANKS</h1>
-                    <h2>A Space Paranoids Labyrinth</h2>
-                    <p>Defeat the enemy tanks to advance.<br>Player: <span id="playerName">User</span></p>
-                    <div class="flex flex-col sm:flex-row">
-                        <button id="controls-desktop" class="game-button">Desktop Mode</button>
-                        <button id="controls-mobile" class="game-button">Mobile Mode</button>
-                    </div>
-                </div>
-            </div>
-            <div id="gameOverScreen" class="game-overlay hidden">
-                <div class="game-overlay-content">
-                    <h1 id="gameOverMessage">&lt;&lt;END OF LINE&gt;&gt;</h1>
-                    <h2 id="winnerMessage" class="mt-4"></h2>
-                    <div class="game-over-buttons flex flex-col sm:flex-row">
-                        <button id="playAgainButton" class="game-button">Play Again</button>
-                        <button id="restartGameButton" class="game-button">Restart</button>
-                        <button id="modeSelectButton" class="game-button">Change Mode</button>
-                    </div>
-                    <p class="mt-4 text-white">High Score: <span id="highScoreDisplay">0</span></p>
-                </div>
-            </div>
-            <div id="countdown" class="game-overlay hidden"><div id="countdown-display"></div></div>
-            <div id="pausedScreen" class="game-overlay hidden">
-                <div class="game-overlay-content">
-                    <h1>PAUSED</h1>
-                    <div class="flex flex-col sm:flex-row mt-4">
-                        <button id="resumeButton" class="game-button">Resume</button>
-                        <button id="restartButtonPaused" class="game-button">Restart</button>
-                        <button id="modeSelectButtonPaused" class="game-button">Change Mode</button>
-                        <button id="open-layout-editor-btn" class="game-button">Edit Layout</button>
-                    </div>
-                </div>
-            </div>
-            <!-- Layout Editor Overlay -->
-            <div id="layout-editor-overlay" class="game-overlay hidden">
-                <h2 class="layout-editor-text">Drag, drop, and resize to customize your layout</h2>
-                <div class="layout-editor-controls">
-                    <button id="save-layout-btn" class="game-button">Save</button>
-                    <button id="reset-layout-btn" class="game-button">Reset</button>
-                    <button id="exit-layout-btn" class="game-button">Exit</button>
-                </div>
+    <!-- Game UI -->
+    <div id="gameUI" class="w-full max-w-4xl mx-auto flex justify-between items-center p-2 neon-text hidden">
+        <div>Score: <span id="score">0</span></div>
+        <div>Hi-Score: <span id="hiScore">0</span></div>
+        <div>Enemies Left: <span id="enemiesLeft">0</span></div>
+        <div class="flex items-center">
+            Health:
+            <div class="w-24 h-4 bg-gray-800 border-2 border-cyan-400 rounded-full ml-2 overflow-hidden">
+                <div id="healthBar" class="h-full rounded-full health-bar-inner" style="width: 100%;"></div>
             </div>
         </div>
+        <button id="pauseButton" class="px-4 py-2 rounded-lg neon-button">Pause</button>
+    </div>
 
-        <!-- Mobile controls section -->
-        <div id="controls-container" class="controls-container hidden">
-            <div id="buttons-layout" class="mobile-controls-layout hidden">
-                <!-- D-Pad buttons -->
-                <div id="dpad-container" class="draggable" style="left: 10%; bottom: 10%; width: 200px; height: 200px;">
-                    <button id="up-btn" class="up"><i class="ph ph-caret-up"></i></button>
-                    <button id="down-btn" class="down"><i class="ph ph-caret-down"></i></button>
-                    <button id="left-btn" class="left"><i class="ph ph-caret-left"></i></button>
-                    <button id="right-btn" class="right"><i class="ph ph-caret-right"></i></button>
-                    <div class="resize-handle"></div>
-                </div>
-                <!-- Action buttons -->
-                <div id="action-controls-container" class="draggable" style="right: 10%; bottom: 10%; width: 100px; height: 200px;">
-                    <button class="action-btn" id="fire-btn"><span><i class="ph ph-target-bold"></i></span>FIRE</button>
-                    <button class="action-btn" id="turret-btn"><span><i class="ph ph-arrow-counter-clockwise"></i></span>TURRET</button>
-                    <div class="resize-handle"></div>
-                </div>
+    <!-- Game Canvas Container -->
+    <div id="canvasContainer" class="flex-grow w-full flex items-center justify-center my-2 relative hidden">
+        <canvas id="gameCanvas" class="bg-black rounded-lg"></canvas>
+        <!-- Control Adjustment Modal will be injected here for mobile -->
+    </div>
+
+    <!-- Mobile Controls Container -->
+    <div id="mobileControlsContainer" class="w-full relative hidden">
+         <div id="mobileControls" class="absolute inset-0 pointer-events-none">
+            <div class="d-pad grid grid-cols-3 gap-2 w-36 h-36 pointer-events-auto" data-control="dpad">
+                <div></div><button id="upBtn" class="col-start-2 rounded-md">&#9650;</button><div></div>
+                <button id="leftBtn" class="rounded-md">&#9664;</button><div></div><button id="rightBtn" class="rounded-md">&#9654;</button>
+                <div></div><button id="downBtn" class="col-start-2 rounded-md">&#9660;</button><div></div>
+            </div>
+            <div class="action-buttons flex flex-col gap-4 pointer-events-auto" data-control="actions">
+                <button id="fireBtn" class="w-20 h-20 rounded-full text-2xl font-bold button-a">A</button>
+                <button id="turretBtn" class="w-20 h-20 rounded-full text-2xl font-bold button-b">B</button>
             </div>
         </div>
     </div>
-    <script type="module">
-        // Firebase Imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    
+    <!-- Start Screen Modal -->
+    <div id="startModal" class="fixed inset-0 z-50 modal flex items-center justify-center">
+        <div class="bg-black border-2 border-cyan-400 p-8 rounded-lg text-center neon-box">
+            <h2 class="text-4xl mb-8 neon-text">VECTOR TANKS</h2>
+            <p class="mb-6">Select Control Type:</p>
+            <button id="desktopStart" class="w-full mb-4 px-4 py-2 rounded-lg neon-button">Desktop (Keyboard)</button>
+            <button id="mobileStart" class="w-full px-4 py-2 rounded-lg neon-button">Mobile (Touch)</button>
+        </div>
+    </div>
 
-        // --- GLOBAL VARIABLES & CONSTANTS ---
-        const TILE_SIZE = 40; // Size of each grid cell for the maze
-        const TANK_SIZE = 30; // Size of the tank graphic
-        const BULLET_SIZE = 8;
-        const FPS = 60;
-        const PLAYER_SPEED = 2;
-        const ENEMY_SPEED = 1;
-        const BULLET_SPEED = 5;
-        const POWERUP_SPAWN_INTERVAL = 10000; // in milliseconds
-        const POWERUP_DURATION = 10000; // in milliseconds
-        const HIT_FLASH_DURATION = 500; // in milliseconds
-        const BORDER_FLASH_DURATION = 200; // in milliseconds
-        const WALL_WIDTH = 4; // Width of the wall lines
+    <!-- Pause Modal -->
+    <div id="pauseModal" class="fixed inset-0 z-50 modal items-center justify-center hidden">
+        <div class="bg-black border-2 border-cyan-400 p-8 rounded-lg text-center neon-box">
+            <h2 class="text-3xl mb-6 neon-text">Paused</h2>
+            <button id="resumeButton" class="w-full mb-4 px-4 py-2 rounded-lg neon-button">Resume</button>
+            <button id="restartButton" class="w-full mb-4 px-4 py-2 rounded-lg neon-button">Restart Game</button>
+            <button id="adjustControlsButton" class="w-full mb-4 px-4 py-2 rounded-lg neon-button hidden">Adjust Controls</button>
+            <div id="mobileLayoutOptions" class="text-left mt-4 hidden">
+                <h3 class="text-xl mb-2 neon-text">Handedness</h3>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="layout" value="left" id="layoutLeft" class="form-radio text-cyan-400">
+                    <span>Left</span>
+                </label>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="radio" name="layout" value="right" id="layoutRight" class="form-radio text-cyan-400" checked>
+                    <span>Right</span>
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Control Adjustment Modal Template -->
+    <template id="controlAdjustModalTemplate">
+        <div id="controlAdjustModal" class="modal items-center justify-center flex">
+            <div class="bg-black border-2 border-cyan-400 p-8 rounded-lg text-center neon-box w-11/12 max-w-md">
+                <h2 class="text-3xl mb-6 neon-text">Adjust Controls</h2>
+                <p class="mb-4 text-sm">Drag controls to move them.</p>
+                <div class="space-y-4 text-left">
+                    <div>
+                        <label for="scaleSlider" class="block mb-1">Size</label>
+                        <input id="scaleSlider" type="range" min="0.5" max="1.5" step="0.1" value="1">
+                    </div>
+                    <div>
+                        <label for="opacitySlider" class="block mb-1">Opacity</label>
+                        <input id="opacitySlider" type="range" min="0.2" max="1" step="0.1" value="0.7">
+                    </div>
+                </div>
+                <button id="closeAdjustControls" class="w-full mt-8 px-4 py-2 rounded-lg neon-button">Done</button>
+            </div>
+        </div>
+    </template>
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+    <!-- Game Over Modal -->
+    <div id="gameOverModal" class="fixed inset-0 z-50 modal items-center justify-center hidden">
+        <div class="bg-black border-2 border-cyan-400 p-8 rounded-lg text-center neon-box w-11/12 max-w-md">
+            <h2 class="text-3xl mb-6 neon-text">User has been Derezzed.</h2>
+            <div class="text-left space-y-2 mb-6">
+                <p>Tanks Derezzed: <span id="statTanks">0</span></p>
+                <p>Shots Fired: <span id="statShots">0</span></p>
+                <p>Power-ups Collected: <span id="statPowerUps">0</span></p>
+                <p>Levels Completed: <span id="statLevels">0</span></p>
+                <p>Final Score: <span id="statScore">0</span></p>
+            </div>
+            <p class="mb-6 neon-text">&lt;&lt;End of Line&gt;&gt;</p>
+            <button id="playAgainButton" class="w-full px-4 py-2 rounded-lg neon-button">Play Again</button>
+        </div>
+    </div>
+    
+    <!-- Level Complete Modal -->
+    <div id="levelCompleteModal" class="fixed inset-0 z-50 modal items-center justify-center hidden">
+        <div class="bg-black border-2 border-cyan-400 p-8 rounded-lg text-center neon-box">
+            <h2 id="levelCompleteText" class="text-3xl mb-4 neon-text">Level 1 Complete</h2>
+            <p id="levelProceedText" class="mb-6">Proceeding to Level 2...</p>
+            <p id="levelCountdown" class="text-5xl neon-text">3</p>
+        </div>
+    </div>
 
-        let db, auth, userId;
-        let gameLoopId, isGameOver = true, gamePaused = false;
-        let userScore = 0, highScore = 0;
-        let currentLevel = 1;
-        let playerTank, enemies = [], bullets = [], powerups = [], walls = [];
-        let lastPowerupSpawnTime = 0;
-        let rapidFireActive = false;
-        let playerHitTime = 0;
-        let powerupFlashTime = 0;
-        let lastEnemyFireTime = 0;
-        let turretButtonHeld = false;
-        let currentMode = 'desktop';
-        let colors = {}; // To store computed CSS colors
+    <script>
+        // --- Game Setup ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const hiScoreEl = document.getElementById('hiScore');
+        const enemiesLeftEl = document.getElementById('enemiesLeft');
+        const healthBarEl = document.getElementById('healthBar');
+        const pauseButton = document.getElementById('pauseButton');
+        const pauseModal = document.getElementById('pauseModal');
+        const resumeButton = document.getElementById('resumeButton');
+        const restartButton = document.getElementById('restartButton');
+        const gameOverModal = document.getElementById('gameOverModal');
+        const playAgainButton = document.getElementById('playAgainButton');
+        const mobileControls = document.getElementById('mobileControls');
+        const mobileControlsContainer = document.getElementById('mobileControlsContainer');
+        const layoutLeftRadio = document.getElementById('layoutLeft');
+        const layoutRightRadio = document.getElementById('layoutRight');
+        const startModal = document.getElementById('startModal');
+        const desktopStartBtn = document.getElementById('desktopStart');
+        const mobileStartBtn = document.getElementById('mobileStart');
+        const gameUI = document.getElementById('gameUI');
+        const canvasContainer = document.getElementById('canvasContainer');
+        const adjustControlsButton = document.getElementById('adjustControlsButton');
+        const mobileLayoutOptions = document.getElementById('mobileLayoutOptions');
+        const levelCompleteModal = document.getElementById('levelCompleteModal');
+        const levelCompleteText = document.getElementById('levelCompleteText');
+        const levelProceedText = document.getElementById('levelProceedText');
+        const levelCountdown = document.getElementById('levelCountdown');
+        // Game Over Stat Elements
+        const statTanks = document.getElementById('statTanks');
+        const statShots = document.getElementById('statShots');
+        const statPowerUps = document.getElementById('statPowerUps');
+        const statLevels = document.getElementById('statLevels');
+        const statScore = document.getElementById('statScore');
 
-        // --- DOM ELEMENT CACHE ---
-        const DOMElements = {
-            mainContainer: document.getElementById('main-game-container'),
-            gameDisplay: document.getElementById('game-display-section'),
-            controlsContainer: document.getElementById('controls-container'),
-            buttonsLayout: document.getElementById('buttons-layout'),
-            gameBoard: document.getElementById('game-board'),
-            canvas: document.getElementById('gameCanvas'),
-            gameMenu: document.getElementById('gameMenu'),
-            gameOverScreen: document.getElementById('gameOverScreen'),
-            winnerMessage: document.getElementById('winnerMessage'),
-            countdownOverlay: document.getElementById('countdown'),
-            countdownDisplay: document.getElementById('countdown-display'),
-            pausedScreen: document.getElementById('pausedScreen'),
-            healthMeterBar: document.getElementById('health-meter-bar'),
-            highScoreDisplay: document.getElementById('highScoreDisplay'),
-            layoutEditor: {
-                overlay: document.getElementById('layout-editor-overlay'),
-                dpad: document.getElementById('dpad-container'),
-                actions: document.getElementById('action-controls-container'),
-                scoreboard: document.getElementById('scoreboard-and-health'),
-            },
-            fireButton: document.getElementById('fire-btn'),
-            turretButton: document.getElementById('turret-btn'),
-            upBtn: document.getElementById('up-btn'),
-            downBtn: document.getElementById('down-btn'),
-            leftBtn: document.getElementById('left-btn'),
-            rightBtn: document.getElementById('right-btn'),
-            pauseButton: document.getElementById('pauseButton'),
+        let TILE_SIZE = 32;
+        let prevTileSize = 32;
+        const MAZE_WIDTH = 21;
+        const MAZE_HEIGHT = 15;
+
+        let player, enemies, projectiles, powerUps;
+        let score = 0;
+        let hiScore = localStorage.getItem('tronTanksHiScore') || 0;
+        let level = 1;
+        // Stat tracking variables
+        let tanksDerezzed = 0;
+        let shotsFired = 0;
+        let powerUpsCollected = 0;
+
+        let isPaused = false;
+        let isAdjustingControls = false;
+        let isLevelTransition = false;
+        let isGameOver = false;
+        let gameStarted = false;
+        let isMobile = false;
+        let maze = [];
+        let powerUpSpawnTimer = 0;
+        let mazeCanvas, mazeCtx;
+
+        // Delta Time variables
+        let lastTime = 0;
+        const TARGET_FPS = 60;
+        const timeStep = 1 / TARGET_FPS;
+
+
+        const keys = {
+            ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
+            ' ': false, Shift: false
         };
-        const ctx = DOMElements.canvas.getContext('2d');
 
-        // --- GAME OBJECTS & CLASSES ---
-
-        /** Represents a wall segment in the labyrinth. */
-        class Wall {
-            constructor(x, y, width, height) {
-                this.x = x;
-                this.y = y;
-                this.width = width;
-                this.height = height;
-            }
+        // --- Helper Functions ---
+        function hexToRgba(hex, alpha = 1) {
+            if (!hex || hex.length < 7) return `rgba(255, 255, 255, ${alpha})`;
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
-        /** Represents a tank (player or enemy). */
+        // --- Game Classes ---
         class Tank {
             constructor(x, y, color, isPlayer = false) {
-                this.x = x;
-                this.y = y;
-                this.size = TANK_SIZE;
-                this.width = TANK_SIZE; // Added for collision detection
-                this.height = TANK_SIZE; // Added for collision detection
-                this.color = color;
-                this.health = 100;
-                this.alive = true;
-                this.speed = isPlayer ? PLAYER_SPEED : ENEMY_SPEED;
-                this.dx = 0;
-                this.dy = 0;
-                this.turretAngle = 0; // in radians
-                this.isFlashing = false;
+                this.x = x; this.y = y; this.color = color; this.isPlayer = isPlayer;
+                this.width = TILE_SIZE * 0.8; this.height = TILE_SIZE * 0.8;
+                this.speed = 120; // Speed in pixels per second
+                this.turretAngle = 0; this.moveDirection = 0;
+                this.health = isPlayer ? 100 : 20; this.maxHealth = isPlayer ? 100 : 20;
+                this.fireCooldown = 0; 
+                this.wanderDirection = Math.floor(Math.random() * 4);
+                this.wanderTimer = 1 + Math.random() * 2; // Time in seconds
+                if (isPlayer) { this.damageFlashTimer = 0; this.activePowerUp = null; this.powerUpTimer = 0; }
             }
-
-            draw() {
-                // Tank body
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                
-                // Draw turret
+            draw() { const centerX = this.x + this.width / 2, centerY = this.y + this.height / 2; let glowColor = this.color; if (this.isPlayer) { if (this.damageFlashTimer > 0) glowColor = '#ff0000'; else if (this.powerUpTimer > 0 && this.activePowerUp) glowColor = this.activePowerUp.color; } ctx.fillStyle = this.color; ctx.shadowColor = glowColor; ctx.shadowBlur = 15; ctx.fillRect(this.x, this.y, this.width, this.height); ctx.save(); ctx.translate(centerX, centerY); ctx.rotate(this.turretAngle * Math.PI / 2); ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 10; ctx.fillRect(-this.width * 0.1, -this.height * 0.6, this.width * 0.2, this.height * 0.7); ctx.restore(); ctx.shadowBlur = 0; }
+            update(dt) { if (this.fireCooldown > 0) this.fireCooldown -= dt; if (this.isPlayer) { if (this.damageFlashTimer > 0) this.damageFlashTimer -= dt; if (this.powerUpTimer > 0) { this.powerUpTimer -= dt; if (this.powerUpTimer <= 0) this.activePowerUp = null; } } else { this.aiUpdate(dt); } }
+            move(dx, dy, maze, allTanks) { const newX = this.x + dx, newY = this.y + dy; if (!this.checkWallCollision(newX, newY, maze) && !this.checkTankCollision(newX, newY, allTanks)) { this.x = newX; this.y = newY; return true; } return false; }
+            checkTankCollision(x, y, allTanks) { for (const otherTank of allTanks) { if (otherTank === this) continue; if (x < otherTank.x + otherTank.width && x + this.width > otherTank.x && y < otherTank.y + otherTank.height && y + this.height > otherTank.y) { return true; } } return false; }
+            checkWallCollision(x, y, maze) { const corners = [{x: x, y: y}, {x: x + this.width, y: y}, {x: x, y: y + this.height}, {x: x + this.width, y: y + this.height}]; for (const corner of corners) { const gridX = Math.floor(corner.x / TILE_SIZE), gridY = Math.floor(corner.y / TILE_SIZE); if (maze[gridY] && maze[gridY][gridX] === 1) return true; } return false; }
+            fire() { 
+                let currentFireCooldown = this.isPlayer ? 0.33 : (1.33 - level * 0.05); 
+                if (this.isPlayer && this.activePowerUp && this.activePowerUp.type === 'rapid-fire') currentFireCooldown = 0.08; 
+                if (this.fireCooldown <= 0) { 
+                    if(this.isPlayer) shotsFired++;
+                    const speed = 300; let dx = 0, dy = 0; 
+                    const offsetX = this.width / 2, offsetY = this.height / 2; 
+                    let startX = this.x + offsetX, startY = this.y + offsetY; 
+                    const muzzleOffset = this.width * 0.5; 
+                    switch (this.turretAngle) { 
+                        case 0: dy = -speed; startY -= muzzleOffset; break; 
+                        case 1: dx = speed; startX += muzzleOffset; break; 
+                        case 2: dy = speed; startY += muzzleOffset; break; 
+                        case 3: dx = -speed; startX -= muzzleOffset; break; 
+                    } 
+                    let bulletColor = this.color;
+                    if (this.isPlayer) {
+                        bulletColor = '#00f7ff'; // Default player bullet color
+                        if (this.powerUpTimer > 0 && this.activePowerUp) {
+                           bulletColor = this.activePowerUp.color;
+                        }
+                    }
+                    projectiles.push(new Projectile(startX, startY, dx, dy, bulletColor)); 
+                    this.fireCooldown = currentFireCooldown; 
+                } 
+            }
+            takeDamage(amount) { if (this.isPlayer && this.activePowerUp && this.activePowerUp.type === 'shield') return; this.health -= amount; if (this.isPlayer) this.damageFlashTimer = 0.25; if (this.health <= 0) { this.health = 0; if(this.isPlayer) { isGameOver = true; showGameOverModal(); } } }
+            aiUpdate(dt) { const playerGridX = Math.floor(player.x / TILE_SIZE); const playerGridY = Math.floor(player.y / TILE_SIZE); const selfGridX = Math.floor(this.x / TILE_SIZE); const selfGridY = Math.floor(this.y / TILE_SIZE); const allTanks = [player, ...enemies]; let hasLineOfSight = false; if (playerGridX === selfGridX) { hasLineOfSight = true; const startY = Math.min(playerGridY, selfGridY), endY = Math.max(playerGridY, selfGridY); for (let y = startY + 1; y < endY; y++) if (maze[y][playerGridX] === 1) { hasLineOfSight = false; break; } if (hasLineOfSight) this.turretAngle = playerGridY > selfGridY ? 2 : 0; } else if (playerGridY === selfGridY) { hasLineOfSight = true; const startX = Math.min(playerGridX, selfGridX), endX = Math.max(playerGridX, selfGridX); for (let x = startX + 1; x < endX; x++) if (maze[playerGridY][x] === 1) { hasLineOfSight = false; break; } if (hasLineOfSight) this.turretAngle = playerGridX > selfGridX ? 1 : 3; } if (hasLineOfSight) { this.fire(); } this.wanderTimer -= dt; let dx = 0, dy = 0; const aiSpeed = this.speed / 2; switch (this.wanderDirection) { case 0: dy = -aiSpeed; break; case 1: dx = aiSpeed; break; case 2: dy = aiSpeed; break; case 3: dx = -aiSpeed; break; } if (!this.move(dx * dt, dy * dt, maze, allTanks) || this.wanderTimer <= 0) { this.wanderDirection = Math.floor(Math.random() * 4); this.wanderTimer = 1 + Math.random() * 2; } }
+        }
+        class Projectile { 
+            constructor(x, y, dx, dy, color) { this.x = x; this.y = y; this.dx = dx; this.dy = dy; this.radius = 4; this.color = color; } 
+            draw() { 
                 ctx.save();
-                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-                ctx.rotate(this.turretAngle);
-                ctx.fillStyle = '#ccc';
-                ctx.fillRect(0, -2, this.width / 2, 4);
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius * 2);
+                gradient.addColorStop(0, hexToRgba(this.color, 1));
+                gradient.addColorStop(0.5, hexToRgba(this.color, 0.5));
+                gradient.addColorStop(1, hexToRgba(this.color, 0));
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius * 2, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
                 ctx.restore();
-            }
-
-            move() {
-                let nextX = this.x + this.dx;
-                let nextY = this.y + this.dy;
-
-                // Collision detection with walls
-                if (!checkWallCollision({x: nextX, y: nextY, width: this.width, height: this.height})) {
-                    this.x = nextX;
-                    this.y = nextY;
-                } else {
-                    // Stop movement on collision
-                    this.dx = 0;
-                    this.dy = 0;
-                }
-            }
-
-            fire() {
-                const angle = this.turretAngle;
-                const bulletX = this.x + this.width / 2 + Math.cos(angle) * (this.width / 2 + BULLET_SIZE);
-                const bulletY = this.y + this.height / 2 + Math.sin(angle) * (this.height / 2 + BULLET_SIZE);
-                bullets.push(new Bullet(bulletX, bulletY, angle, this));
-            }
-
-            takeDamage(amount) {
-                this.health -= amount;
-                if (this.health <= 0) {
-                    this.alive = false;
-                    this.health = 0;
-                }
-                this.isFlashing = true;
-                playerHitTime = Date.now();
-                updateHealthBar();
-                flashCanvasBorder('hit');
-            }
-
-            heal(amount) {
-                this.health = Math.min(100, this.health + amount);
-                updateHealthBar();
-                flashCanvasBorder('health');
-            }
+            } 
+            update(dt) { this.x += this.dx * dt; this.y += this.dy * dt; } 
         }
-
-        /** Represents a bullet fired by a tank. */
-        class Bullet {
-            constructor(x, y, angle, shooter) {
-                this.x = x;
-                this.y = y;
-                this.size = BULLET_SIZE;
-                this.width = BULLET_SIZE; // Added for collision detection
-                this.height = BULLET_SIZE; // Added for collision detection
-                this.speedX = Math.cos(angle) * BULLET_SPEED;
-                this.speedY = Math.sin(angle) * BULLET_SPEED;
-                this.shooter = shooter;
-                this.alive = true;
-            }
-
-            draw() {
-                ctx.fillStyle = this.shooter.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            move() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-            }
-        }
-
-        /** Represents a power-up. */
-        class Powerup {
-            constructor(x, y, type) {
-                this.x = x;
-                this.y = y;
-                this.size = TILE_SIZE / 2;
-                this.width = this.size;
-                this.height = this.size;
-                this.type = type;
-                this.color = type === 'rapid' ? colors.powerupRapid : colors.powerupHealth;
-            }
-
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x + this.size / 2, this.y + this.size / 2, this.size / 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        // --- UTILITY FUNCTIONS ---
-        const updateElementVisibility = (el, isVisible) => el?.classList.toggle('hidden', !isVisible);
-
-        /**
-         * Retrieves the computed value of a CSS variable.
-         * @param {string} name The name of the CSS variable (e.g., '--player-color').
-         * @returns {string} The computed color value.
-         */
-        const getComputedColor = (name) => {
-            if (colors[name]) return colors[name];
-            const color = getComputedStyle(document.documentElement).getPropertyValue(name);
-            colors[name] = color;
-            return color;
-        };
+        class PowerUp { constructor(x, y, type) { this.x = x; this.y = y; this.type = type; this.size = TILE_SIZE * 0.4; this.colors = { 'rapid-fire': '#ff00ff', 'shield': '#ffff00', 'health': '#00ff00' }; this.color = this.colors[type]; } draw() { const centerX = this.x * TILE_SIZE + TILE_SIZE / 2, centerY = this.y * TILE_SIZE + TILE_SIZE / 2; ctx.beginPath(); ctx.arc(centerX, centerY, this.size, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.shadowColor = this.color; ctx.shadowBlur = 20; ctx.fill(); ctx.closePath(); ctx.shadowBlur = 0; } }
+        function generateMaze(width, height) { let matrix = Array(height).fill(null).map(() => Array(width).fill(1)); function carve(x, y) { matrix[y][x] = 0; const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]]; directions.sort(() => Math.random() - 0.5); for (let [dx, dy] of directions) { const nx = x + dx * 2, ny = y + dy * 2; if (ny >= 0 && ny < height && nx >= 0 && nx < width && matrix[ny][nx] === 1) { matrix[y + dy][x + dx] = 0; carve(nx, ny); } } } carve(1, 1); let connections = Math.floor((width * height) / 20); for(let i = 0; i < connections; i++) { let x = Math.floor(Math.random() * (width - 2)) + 1, y = Math.floor(Math.random() * (height - 2)) + 1; if(matrix[y][x] === 1) matrix[y][x] = 0; } return matrix; }
         
-        const checkCollision = (obj1, obj2) => {
-            return obj1.x < obj2.x + obj2.width &&
-                   obj1.x + obj1.width > obj2.x &&
-                   obj1.y < obj2.y + obj2.height &&
-                   obj1.y + obj1.height > obj2.y;
-        };
-
-        const checkWallCollision = (rect) => {
-            for (let wall of walls) {
-                if (checkCollision(rect, wall)) {
-                    return true;
-                }
-            }
-            return false;
-        };
-
-        const updateScoreDisplay = () => {
-            document.getElementById('userScore').textContent = userScore;
-        };
-
-        const updateHealthBar = () => {
-            const healthPercentage = playerTank.health;
-            DOMElements.healthMeterBar.style.width = `${healthPercentage}%`;
-            DOMElements.healthMeterBar.style.backgroundColor = healthPercentage > 50 ? getComputedColor('--player-color') :
-                healthPercentage > 20 ? getComputedColor('--powerup-rapid') : 'red';
-        };
-
-        const resizeCanvas = () => {
-            const rect = DOMElements.gameBoard.getBoundingClientRect();
-            let size = Math.min(rect.width, rect.height);
-            DOMElements.canvas.width = DOMElements.canvas.height = Math.floor(size / TILE_SIZE) * TILE_SIZE;
-            if (!isGameOver) drawGame();
-        };
-
-        const flashCanvasBorder = (type) => {
-            const canvas = DOMElements.canvas;
-            if (type === 'hit') {
-                canvas.style.boxShadow = `0 0 20px 5px red`;
-            } else if (type === 'health') {
-                canvas.style.boxShadow = `0 0 20px 5px ${getComputedColor('--powerup-health')}`;
-            } else if (type === 'rapid') {
-                canvas.style.boxShadow = `0 0 20px 5px ${getComputedColor('--powerup-rapid')}`;
-            }
-            setTimeout(() => {
-                canvas.style.boxShadow = `0 0 20px 5px ${getComputedColor('--player-color')}`;
-            }, BORDER_FLASH_DURATION);
-        };
+        function drawMazeToCache() { if (!mazeCanvas) { mazeCanvas = document.createElement('canvas'); mazeCtx = mazeCanvas.getContext('2d'); } mazeCanvas.width = canvas.width; mazeCanvas.height = canvas.height; mazeCtx.strokeStyle = '#00f7ff'; mazeCtx.lineWidth = 2; mazeCtx.shadowColor = '#00f7ff'; mazeCtx.shadowBlur = 10; for (let y = 0; y < MAZE_HEIGHT; y++) { for (let x = 0; x < MAZE_WIDTH; x++) { if (maze[y][x] === 1) { mazeCtx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE); } } } mazeCtx.shadowBlur = 0; }
+        function drawCachedMaze() { let glowColor = '#00f7ff'; if (player && player.damageFlashTimer > 0) glowColor = '#ff0000'; else if (player && player.powerUpTimer > 0 && player.activePowerUp) glowColor = player.activePowerUp.color; canvas.style.borderColor = glowColor; canvas.style.boxShadow = `0 0 10px ${glowColor}, 0 0 20px ${glowColor}, 0 0 30px ${glowColor}, 0 0 40px ${glowColor}`; if (mazeCanvas) ctx.drawImage(mazeCanvas, 0, 0); }
         
-        // --- MAZE GENERATION (Simplified) ---
-        function generateLabyrinth() {
-            walls = [];
-            const cols = Math.floor(DOMElements.canvas.width / TILE_SIZE);
-            const rows = Math.floor(DOMElements.canvas.height / TILE_SIZE);
-
-            // Create a simple, static maze pattern
-            const mazePattern = [
-                "################################",
-                "#                              #",
-                "#  #  ####  #  #  ####  #   #  #",
-                "#  #  #     #  #  #     # # #  #",
-                "#  #  ####  #  #  ####  ##  #  #",
-                "#  #  #     #  #  #     #   #  #",
-                "#  #  ####  ####  ####  #   #  #",
-                "#                              #",
-                "################################"
-            ];
-
-            const cellWidth = DOMElements.canvas.width / mazePattern[0].length;
-            const cellHeight = DOMElements.canvas.height / mazePattern.length;
-
-            for (let y = 0; y < mazePattern.length; y++) {
-                for (let x = 0; x < mazePattern[y].length; x++) {
-                    if (mazePattern[y][x] === '#') {
-                        walls.push(new Wall(x * cellWidth, y * cellHeight, cellWidth, cellHeight));
-                    }
+        function init() { isGameOver = false; maze = generateMaze(MAZE_WIDTH, MAZE_HEIGHT); drawMazeToCache(); player = new Tank(TILE_SIZE * 1.5 - TILE_SIZE/2, TILE_SIZE * 1.5 - TILE_SIZE/2, '#00f7ff', true); enemies = []; const numEnemies = Math.min(3 + level, 10); const occupiedCells = ['1,1']; for (let i = 0; i < numEnemies; i++) { let placed = false; while(!placed) { const x = Math.floor(Math.random() * (MAZE_WIDTH - 2)) + 1; const y = Math.floor(Math.random() * (MAZE_HEIGHT - 2)) + 1; const cell = `${x},${y}`; if (maze[y][x] === 0 && !occupiedCells.includes(cell)) { enemies.push(new Tank(x * TILE_SIZE + (TILE_SIZE - TILE_SIZE * 0.8)/2, y * TILE_SIZE + (TILE_SIZE - TILE_SIZE * 0.8)/2, '#ff8c00')); occupiedCells.push(cell); placed = true; } } } projectiles = []; powerUps = []; powerUpSpawnTimer = 5; updateUI(); }
+        function resetGame() { score = 0; level = 1; tanksDerezzed = 0; shotsFired = 0; powerUpsCollected = 0; init(); }
+        function nextLevel() { level++; player.health = Math.min(player.maxHealth, player.health + 25); init(); }
+        function showLevelCompleteScreen() {
+            isLevelTransition = true;
+            levelCompleteText.textContent = `Level ${level} Complete`;
+            levelProceedText.textContent = `Proceeding to Level ${level + 1}...`;
+            levelCompleteModal.classList.remove('hidden');
+            levelCompleteModal.classList.add('flex');
+            let count = 3;
+            levelCountdown.textContent = count;
+            const interval = setInterval(() => {
+                count--;
+                levelCountdown.textContent = count;
+                if (count === 0) {
+                    clearInterval(interval);
+                    levelCompleteModal.classList.add('hidden');
+                    levelCompleteModal.classList.remove('flex');
+                    isLevelTransition = false;
+                    nextLevel();
                 }
-            }
-        };
-
-        // --- FIREBASE FUNCTIONS ---
-        async function setupFirebase() {
-            if (!firebaseConfig || Object.keys(firebaseConfig).length === 0) return;
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                initialAuthToken ? await signInWithCustomToken(auth, initialAuthToken) : await signInAnonymously(auth);
-                userId = auth.currentUser?.uid;
-                const scoresDocRef = doc(db, `artifacts/${appId}/users/${userId}/tanksGame`, "scores");
-                onSnapshot(scoresDocRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        highScore = data.highScore || 0;
-                        DOMElements.highScoreDisplay.textContent = highScore;
-                    }
-                });
-                const docSnap = await getDoc(scoresDocRef);
-                if (!docSnap.exists()) {
-                    await setDoc(scoresDocRef, { highScore: 0 });
-                }
-            } catch (error) {
-                console.error("Firebase init failed:", error);
-            }
+            }, 1000);
         }
-
-        async function saveHighScore() {
-            if (!userId || !db) return;
-            try {
-                if (userScore > highScore) {
-                    await setDoc(doc(db, `artifacts/${appId}/users/${userId}/tanksGame`, "scores"), { highScore: userScore });
-                    highScore = userScore;
-                    DOMElements.highScoreDisplay.textContent = highScore;
-                }
-            } catch (error) {
-                console.error("Error saving high score:", error);
-            }
+        function spawnPowerUp() { const types = ['rapid-fire', 'shield', 'health']; const type = types[Math.floor(Math.random() * types.length)]; let placed = false; while(!placed) { const x = Math.floor(Math.random() * (MAZE_WIDTH - 2)) + 1, y = Math.floor(Math.random() * (MAZE_HEIGHT - 2)) + 1; if (maze[y][x] === 0) { powerUps.push(new PowerUp(x, y, type)); placed = true; } } }
+        function update(dt) { if (isPaused || isGameOver || !gameStarted || isAdjustingControls || isLevelTransition) return; const allTanks = [player, ...enemies]; const playerSpeed = (keys.Shift ? player.speed / 2 : player.speed) * dt; if (!keys.Shift) { if (keys.ArrowUp) { player.move(0, -playerSpeed, maze, allTanks); player.moveDirection = 0; } if (keys.ArrowDown) { player.move(0, playerSpeed, maze, allTanks); player.moveDirection = 2; } if (keys.ArrowLeft) { player.move(-playerSpeed, 0, maze, allTanks); player.moveDirection = 3; } if (keys.ArrowRight) { player.move(playerSpeed, 0, maze, allTanks); player.moveDirection = 1; } } else { if (keys.ArrowUp) player.turretAngle = 0; if (keys.ArrowDown) player.turretAngle = 2; if (keys.ArrowLeft) player.turretAngle = 3; if (keys.ArrowRight) player.turretAngle = 1; } if (keys[' ']) player.fire(); player.update(dt); enemies.forEach(e => e.update(dt)); projectiles.forEach(p => p.update(dt)); handleCollisions(); projectiles = projectiles.filter(p => p.x > 0 && p.x < canvas.width && p.y > 0 && p.y < canvas.height); if (enemies.length === 0) showLevelCompleteScreen(); powerUpSpawnTimer -= dt; if (powerUpSpawnTimer <= 0) { if (powerUps.length < 3) spawnPowerUp(); powerUpSpawnTimer = 10 + Math.random() * 5; } }
+        function handleCollisions() { projectiles = projectiles.filter(p => { const gridX = Math.floor(p.x / TILE_SIZE), gridY = Math.floor(p.y / TILE_SIZE); return !(maze[gridY] && maze[gridY][gridX] === 1); }); for (let i = projectiles.length - 1; i >= 0; i--) { const p = projectiles[i]; let hit = false; if (p.color !== player.color && p.x > player.x && p.x < player.x + player.width && p.y > player.y && p.y < player.y + player.height) { player.takeDamage(10 + level); hit = true; } else { for (let j = enemies.length - 1; j >= 0; j--) { const e = enemies[j]; if (p.color !== e.color && p.x > e.x && p.x < e.x + e.width && p.y > e.y && p.y < e.y + e.height) { e.takeDamage(20); if (e.health <= 0) { enemies.splice(j, 1); score += 100 * level; tanksDerezzed++; } hit = true; break; } } } if (hit) projectiles.splice(i, 1); } for (let i = powerUps.length - 1; i >= 0; i--) { const pu = powerUps[i]; const puCenterX = pu.x * TILE_SIZE + TILE_SIZE / 2, puCenterY = pu.y * TILE_SIZE + TILE_SIZE / 2; const playerCenterX = player.x + player.width / 2, playerCenterY = player.y + player.height / 2; const dist = Math.hypot(puCenterX - playerCenterX, puCenterY - playerCenterY); if (dist < pu.size + player.width / 2) { player.activePowerUp = pu; powerUpsCollected++; if (pu.type === 'health') { player.health = Math.min(player.maxHealth, player.health + 50); } else { player.powerUpTimer = 10; } powerUps.splice(i, 1); } } }
+        function draw() { if (!gameStarted) return; ctx.clearRect(0, 0, canvas.width, canvas.height); drawCachedMaze(); powerUps.forEach(pu => pu.draw()); player.draw(); enemies.forEach(e => e.draw()); projectiles.forEach(p => p.draw()); updateUI(); }
+        function gameLoop(timestamp) { const deltaTime = (timestamp - lastTime) / 1000; lastTime = timestamp; update(deltaTime || timeStep); draw(); requestAnimationFrame(gameLoop); }
+        function updateUI() { scoreEl.textContent = score; if (score > hiScore) { hiScore = score; localStorage.setItem('tronTanksHiScore', hiScore); } hiScoreEl.textContent = hiScore; enemiesLeftEl.textContent = enemies.length; const healthPercentage = (player.health / player.maxHealth) * 100; healthBarEl.style.width = `${healthPercentage}%`; }
+        function togglePause() { if (!gameStarted) return; isPaused = !isPaused; pauseModal.classList.toggle('hidden'); pauseModal.classList.toggle('flex'); }
+        function showGameOverModal() { 
+            statTanks.textContent = tanksDerezzed;
+            statShots.textContent = shotsFired;
+            statPowerUps.textContent = powerUpsCollected;
+            statLevels.textContent = level - 1;
+            statScore.textContent = score;
+            gameOverModal.classList.remove('hidden'); 
+            gameOverModal.classList.add('flex'); 
         }
-
-        // --- GAME LOGIC ---
-        function startGame(mode) {
-            currentMode = mode;
-            updateElementVisibility(DOMElements.gameMenu, false);
-            updateElementVisibility(DOMElements.gameOverScreen, false);
-            updateElementVisibility(DOMElements.pausedScreen, false);
-            updateElementVisibility(DOMElements.layoutEditor.overlay, false);
-            updateElementVisibility(DOMElements.pauseButton, true);
-            
-            const isDesktop = mode === 'desktop';
-            DOMElements.mainContainer.classList.toggle('full-screen-game', isDesktop);
-            DOMElements.mainContainer.classList.toggle('mobile-layout', !isDesktop);
-            updateElementVisibility(DOMElements.controlsContainer, !isDesktop);
-            updateElementVisibility(DOMElements.buttonsLayout, mode === 'mobile');
-            
-            if (mode === 'mobile') {
-                layoutManager.apply();
-            }
-
-            setTimeout(() => {
-                resizeCanvas();
-                startNewCountdown();
-            }, 50);
-        }
+        window.addEventListener('keydown', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; if (e.key === 'p' || e.key === 'Escape') togglePause(); });
+        window.addEventListener('keyup', e => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+        pauseButton.addEventListener('click', togglePause);
+        resumeButton.addEventListener('click', togglePause);
+        restartButton.addEventListener('click', () => { togglePause(); resetGame(); });
+        playAgainButton.addEventListener('click', () => { gameOverModal.classList.add('hidden'); gameOverModal.classList.remove('flex'); resetGame(); });
+        let turretMode = false;
+        const dpadButtons = { upBtn: { key: 'ArrowUp' }, downBtn: { key: 'ArrowDown' }, leftBtn: { key: 'ArrowLeft' }, rightBtn: { key: 'ArrowRight' } };
+        function handleDPad(btnId, isPressed) { const button = dpadButtons[btnId]; if (!button) return; if (turretMode) keys['Shift'] = isPressed; keys[button.key] = isPressed; }
+        Object.keys(dpadButtons).forEach(id => { const btn = document.getElementById(id); btn.addEventListener('touchstart', (e) => { e.preventDefault(); handleDPad(id, true); }, { passive: false }); btn.addEventListener('touchend', (e) => { e.preventDefault(); handleDPad(id, false); }, { passive: false }); });
+        const fireBtn = document.getElementById('fireBtn');
+        fireBtn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[' '] = true; }, { passive: false });
+        fireBtn.addEventListener('touchend', (e) => { e.preventDefault(); keys[' '] = false; }, { passive: false });
+        const turretBtn = document.getElementById('turretBtn');
+        turretBtn.addEventListener('touchstart', (e) => { e.preventDefault(); turretMode = true; }, { passive: false });
+        turretBtn.addEventListener('touchend', (e) => { e.preventDefault(); turretMode = false; keys['Shift'] = false; }, { passive: false });
+        function setMobileLayout(layout) { applyControlSettings(); localStorage.setItem('tronTanksHandedness', layout); }
+        layoutLeftRadio.addEventListener('change', () => setMobileLayout('left'));
+        layoutRightRadio.addEventListener('change', () => setMobileLayout('right'));
+        const controlSettings = { dpad: { x: 20, y: 20 }, actions: { x: 20, y: 20 }, scale: 1, opacity: 0.7 };
+        function applyControlSettings() { const dpad = mobileControls.querySelector('.d-pad'); const actions = mobileControls.querySelector('.action-buttons'); dpad.style.transform = `scale(${controlSettings.scale})`; dpad.style.opacity = controlSettings.opacity; actions.style.transform = `scale(${controlSettings.scale})`; actions.style.opacity = controlSettings.opacity; const handedness = layoutRightRadio.checked ? 'right' : 'left'; dpad.style.bottom = `${controlSettings.dpad.y}px`; actions.style.bottom = `${controlSettings.actions.y}px`; dpad.style.left = dpad.style.right = actions.style.left = actions.style.right = 'auto'; if (handedness === 'right') { dpad.style.left = `${controlSettings.dpad.x}px`; actions.style.right = `${controlSettings.actions.x}px`; } else { dpad.style.right = `${controlSettings.dpad.x}px`; actions.style.left = `${controlSettings.actions.x}px`; } }
+        function saveControlSettings() { localStorage.setItem('tronTanksControlSettings', JSON.stringify(controlSettings)); }
+        function loadControlSettings() { const saved = localStorage.getItem('tronTanksControlSettings'); if (saved) { const loaded = JSON.parse(saved); Object.assign(controlSettings, loaded); } applyControlSettings(); }
         
-        function startNewCountdown() {
-            updateElementVisibility(DOMElements.countdownOverlay, true);
-            DOMElements.countdownDisplay.textContent = "Ready?";
-            setTimeout(() => { DOMElements.countdownDisplay.textContent = "Level " + currentLevel; }, 1000);
-            setTimeout(() => { DOMElements.countdownDisplay.textContent = "Go!"; }, 2000);
-            setTimeout(() => {
-                updateElementVisibility(DOMElements.countdownOverlay, false);
-                initLevel();
-            }, 3000);
+        function setupAdjustControls() {
+            const template = document.getElementById('controlAdjustModalTemplate');
+            const clone = template.content.cloneNode(true);
+            canvasContainer.appendChild(clone);
+            const scaleSlider = document.getElementById('scaleSlider');
+            const opacitySlider = document.getElementById('opacitySlider');
+            const closeAdjustControls = document.getElementById('closeAdjustControls');
+            scaleSlider.value = controlSettings.scale;
+            opacitySlider.value = controlSettings.opacity;
+            scaleSlider.addEventListener('input', (e) => { controlSettings.scale = e.target.value; applyControlSettings(); });
+            opacitySlider.addEventListener('input', (e) => { controlSettings.opacity = e.target.value; applyControlSettings(); });
+            closeAdjustControls.addEventListener('click', () => { saveControlSettings(); document.getElementById('controlAdjustModal').remove(); mobileControls.classList.remove('is-adjusting'); isAdjustingControls = false; togglePause(); });
         }
 
-        function initLevel() {
-            isGameOver = false;
-            gamePaused = false;
-            ctx.clearRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
-            
-            generateLabyrinth();
-
-            // Find a valid spawn point for the player
-            let playerX, playerY;
-            let isValidPosition = false;
-            while (!isValidPosition) {
-                playerX = (Math.random() * (DOMElements.canvas.width - TANK_SIZE));
-                playerY = (Math.random() * (DOMElements.canvas.height - TANK_SIZE));
-                if (!checkWallCollision({x: playerX, y: playerY, width: TANK_SIZE, height: TANK_SIZE})) {
-                    isValidPosition = true;
-                }
-            }
-
-            playerTank = new Tank(playerX, playerY, getComputedColor('--player-color'), true);
-            enemies = [];
-            bullets = [];
-            powerups = [];
-            lastPowerupSpawnTime = Date.now();
-
-            // Spawn enemies
-            const numEnemies = currentLevel * 2;
-            for (let i = 0; i < numEnemies; i++) {
-                let enemyX, enemyY;
-                let enemyIsValidPosition = false;
-                while (!enemyIsValidPosition) {
-                    enemyX = (Math.random() * (DOMElements.canvas.width - TANK_SIZE));
-                    enemyY = (Math.random() * (DOMElements.canvas.height - TANK_SIZE));
-                    // Check for collision with player and walls
-                    if (!checkWallCollision({x: enemyX, y: enemyY, width: TANK_SIZE, height: TANK_SIZE}) &&
-                        Math.abs(enemyX - playerTank.x) > 100 && Math.abs(enemyY - playerTank.y) > 100) {
-                        enemyIsValidPosition = true;
-                    }
-                }
-                const enemy = new Tank(enemyX, enemyY, getComputedColor('--enemy-color'));
-                enemy.speed = ENEMY_SPEED + (currentLevel * 0.2);
-                enemies.push(enemy);
-            }
-
-            // Start the game loop
-            if (gameLoopId) clearInterval(gameLoopId);
-            gameLoopId = setInterval(gameTick, 1000 / FPS);
-        }
-
-        function gameTick() {
-            if (isGameOver || gamePaused) return;
-
-            // Player logic
-            playerTank.move();
-            
-            // Player turret rotation
-            if (turretButtonHeld) {
-                if (DOMElements.upBtn.pressed) playerTank.turretAngle = -Math.PI / 2;
-                if (DOMElements.downBtn.pressed) playerTank.turretAngle = Math.PI / 2;
-                if (DOMElements.leftBtn.pressed) playerTank.turretAngle = Math.PI;
-                if (DOMElements.rightBtn.pressed) playerTank.turretAngle = 0;
-            }
-
-            // Enemies logic
-            enemies.forEach(enemy => {
-                if (enemy.alive) {
-                    if (enemy.dx === 0 && enemy.dy === 0) { // Enemy stopped, pick new random direction
-                        const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-                        let newDir = directions[Math.floor(Math.random() * directions.length)];
-                        enemy.dx = newDir[0] * enemy.speed;
-                        enemy.dy = newDir[1] * enemy.speed;
-                    }
-                    enemy.move();
-                    enemy.turretAngle = Math.atan2(playerTank.y - enemy.y, playerTank.x - enemy.x);
-                    if (Date.now() - lastEnemyFireTime > 2000) {
-                        enemy.fire();
-                        lastEnemyFireTime = Date.now();
-                    }
-                }
-            });
-
-            // Bullets logic
-            bullets.forEach(bullet => bullet.move());
-
-            // Power-up logic
-            if (Date.now() - lastPowerupSpawnTime > POWERUP_SPAWN_INTERVAL) {
-                spawnPowerup();
-                lastPowerupSpawnTime = Date.now();
-            }
-
-            // Collisions
-            checkCollisions();
-
-            // Check win/lose conditions
-            if (!playerTank.alive) {
-                endGame("Game Over", `You were defeated on Level ${currentLevel}.`);
-            } else if (enemies.filter(e => e.alive).length === 0) {
-                userScore += currentLevel * 100; // Bonus for completing the level
-                currentLevel++;
-                endGame("Level Complete", `You cleared Level ${currentLevel - 1}! Proceeding to Level ${currentLevel}...`, true);
-            }
-
-            drawGame();
-        }
-
-        function checkCollisions() {
-            // Bullet-to-wall collisions
-            bullets.forEach(bullet => {
-                if (checkWallCollision(bullet)) {
-                    bullet.alive = false;
-                }
-            });
-
-            // Player-to-enemy bullet collisions
-            bullets.forEach(bullet => {
-                if (bullet.shooter !== playerTank && checkCollision(bullet, playerTank) && playerTank.alive) {
-                    playerTank.takeDamage(10);
-                    bullet.alive = false;
-                }
-            });
-
-            // Player bullet-to-enemy collisions
-            bullets.forEach(bullet => {
-                if (bullet.shooter === playerTank) {
-                    enemies.forEach(enemy => {
-                        if (enemy.alive && checkCollision(bullet, enemy)) {
-                            enemy.takeDamage(50);
-                            bullet.alive = false;
-                            userScore += 50; // Points for hitting an enemy
-                            updateScoreDisplay();
-                        }
-                    });
-                }
-            });
-
-            // Player-to-powerup collisions
-            powerups.forEach(powerup => {
-                if (checkCollision(playerTank, powerup)) {
-                    if (powerup.type === 'rapid') {
-                        rapidFireActive = true;
-                        flashCanvasBorder('rapid');
-                        powerupFlashTime = Date.now();
-                        setTimeout(() => { rapidFireActive = false; }, POWERUP_DURATION);
-                    } else if (powerup.type === 'health') {
-                        playerTank.heal(25);
-                    }
-                    powerup.alive = false;
-                }
-            });
-
-            bullets = bullets.filter(b => b.alive);
-            enemies = enemies.filter(e => e.alive || e.health > 0);
-            powerups = powerups.filter(p => p.alive);
-        }
-
-        function spawnPowerup() {
-            const type = Math.random() > 0.5 ? 'rapid' : 'health';
-            let powerupX, powerupY;
-            let isValidPosition = false;
-            while (!isValidPosition) {
-                powerupX = Math.random() * (DOMElements.canvas.width - TANK_SIZE);
-                powerupY = Math.random() * (DOMElements.canvas.height - TANK_SIZE);
-                if (!checkWallCollision({x: powerupX, y: powerupY, width: TANK_SIZE, height: TANK_SIZE})) {
-                    isValidPosition = true;
-                }
-            }
-            powerups.push(new Powerup(powerupX, powerupY, type));
-        }
-
-        function drawGame() {
-            ctx.clearRect(0, 0, DOMElements.canvas.width, DOMElements.canvas.height);
-
-            // Draw glowing walls
-            ctx.fillStyle = getComputedColor('--wall-color');
-            ctx.shadowColor = getComputedColor('--wall-color');
-            ctx.shadowBlur = 10;
-            walls.forEach(wall => {
-                ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
-            });
-            ctx.shadowBlur = 0;
-
-            // Handle player flash effect
-            if (Date.now() - playerHitTime < HIT_FLASH_DURATION) {
-                DOMElements.canvas.style.boxShadow = `0 0 20px 5px red`;
-            } else if (Date.now() - powerupFlashTime < POWERUP_DURATION) {
-                // Keep the border flash from the powerup for the duration
-            } else {
-                DOMElements.canvas.style.boxShadow = `0 0 20px 5px ${getComputedColor('--player-color')}`;
-            }
-
-            // Draw game objects
-            if (playerTank.alive) playerTank.draw();
-            enemies.forEach(enemy => { if(enemy.alive) enemy.draw() });
-            bullets.forEach(bullet => { if(bullet.alive) bullet.draw() });
-            powerups.forEach(powerup => { if(powerup.alive) powerup.draw() });
-        }
-
-        function endGame(message, subMessage, nextLevel = false) {
-            isGameOver = true;
-            clearInterval(gameLoopId);
-            updateElementVisibility(DOMElements.gameOverScreen, true);
-            updateElementVisibility(DOMElements.pauseButton, false);
-            document.getElementById('gameOverMessage').textContent = message;
-            document.getElementById('winnerMessage').textContent = subMessage;
-            
-            if (nextLevel) {
-                document.getElementById('playAgainButton').textContent = "Next Level";
-                document.getElementById('playAgainButton').onclick = () => {
-                    startGame(currentMode);
-                };
-            } else {
-                document.getElementById('playAgainButton').textContent = "Play Again";
-                document.getElementById('playAgainButton').onclick = () => {
-                    userScore = 0;
-                    currentLevel = 1;
-                    updateScoreDisplay();
-                    startGame(currentMode);
-                };
-            }
-            saveHighScore();
-        }
-
-        function pauseGame() {
-            gamePaused = true;
-            updateElementVisibility(DOMElements.pausedScreen, true);
-        }
-
-        function resumeGame() {
-            gamePaused = false;
-            updateElementVisibility(DOMElements.pausedScreen, false);
-            gameLoopId = setInterval(gameTick, 1000 / FPS);
-        }
-
-        // --- INPUT HANDLING ---
-        const InputManager = {
-            keys: {},
-            setup: () => {
-                document.addEventListener('keydown', (e) => {
-                    if (isGameOver || gamePaused) return;
-                    InputManager.keys[e.key] = true;
-                    // Player movement
-                    if (e.key === 'ArrowUp') { playerTank.dx = 0; playerTank.dy = -PLAYER_SPEED; }
-                    if (e.key === 'ArrowDown') { playerTank.dx = 0; playerTank.dy = PLAYER_SPEED; }
-                    if (e.key === 'ArrowLeft') { playerTank.dx = -PLAYER_SPEED; playerTank.dy = 0; }
-                    if (e.key === 'ArrowRight') { playerTank.dx = PLAYER_SPEED; playerTank.dy = 0; }
-                    // Turret rotation
-                    if (InputManager.keys['Shift']) {
-                        if (e.key === 'ArrowUp') playerTank.turretAngle = -Math.PI / 2;
-                        if (e.key === 'ArrowDown') playerTank.turretAngle = Math.PI / 2;
-                        if (e.key === 'ArrowLeft') playerTank.turretAngle = Math.PI;
-                        if (e.key === 'ArrowRight') playerTank.turretAngle = 0;
-                    }
-                    // Firing
-                    if (e.key === ' ' && !InputManager.keys['Shift']) {
-                        playerTank.fire();
-                    }
-                });
-                document.addEventListener('keyup', (e) => {
-                    InputManager.keys[e.key] = false;
-                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                        playerTank.dx = 0;
-                        playerTank.dy = 0;
-                    }
-                });
-            }
-        };
-
-        // --- MOBILE LAYOUT MANAGEMENT (from provided code) ---
-        const layoutManager = {
-            activeEl: null,
-            initialX: 0,
-            initialY: 0,
-            initialRect: null,
-            isResizing: false,
-            init: () => {
-                const elements = document.querySelectorAll('.draggable');
-                elements.forEach(el => {
-                    el.addEventListener('mousedown', layoutManager.startDrag);
-                    el.addEventListener('touchstart', layoutManager.startDrag);
-                    const resizeHandle = el.querySelector('.resize-handle');
-                    if (resizeHandle) {
-                        resizeHandle.addEventListener('mousedown', layoutManager.startResize);
-                        resizeHandle.addEventListener('touchstart', layoutManager.startResize);
-                    }
-                });
-                document.addEventListener('mousemove', layoutManager.drag);
-                document.addEventListener('touchmove', layoutManager.drag);
-                document.addEventListener('mouseup', layoutManager.endDrag);
-                document.addEventListener('touchend', layoutManager.endDrag);
-
-                // Load saved layout
-                layoutManager.load();
-            },
-            apply: () => {
-                const controls = document.getElementById('buttons-layout');
-                controls.style.display = 'block';
-                const layout = JSON.parse(localStorage.getItem('mobileLayout'));
-                if (layout) {
-                    for (const id in layout) {
-                        const el = document.getElementById(id);
-                        if (el) {
-                            el.style.left = layout[id].x + 'px';
-                            el.style.top = layout[id].y + 'px';
-                            el.style.width = layout[id].width ? layout[id].width + 'px' : '';
-                            el.style.height = layout[id].height ? layout[id].height + 'px' : '';
-                        }
-                    }
-                }
-            },
-            save: () => {
-                const elements = document.querySelectorAll('.draggable');
-                const layout = {};
-                elements.forEach(el => {
-                    const rect = el.getBoundingClientRect();
-                    const parentRect = el.parentElement.getBoundingClientRect();
-                    layout[el.id] = {
-                        x: rect.left - parentRect.left,
-                        y: rect.top - parentRect.top,
-                        width: rect.width,
-                        height: rect.height,
-                    };
-                });
-                localStorage.setItem('mobileLayout', JSON.stringify(layout));
-            },
-            load: () => {
-                const layout = JSON.parse(localStorage.getItem('mobileLayout'));
-                if (layout) {
-                    for (const id in layout) {
-                        const el = document.getElementById(id);
-                        if (el) {
-                            el.style.left = layout[id].x + 'px';
-                            el.style.top = layout[id].y + 'px';
-                            el.style.width = layout[id].width ? layout[id].width + 'px' : '';
-                            el.style.height = layout[id].height ? layout[id].height + 'px' : '';
-                        }
-                    }
-                }
-            },
-            reset: () => {
-                localStorage.removeItem('mobileLayout');
-                window.location.reload();
-            },
-            startDrag: (e) => {
-                if (!DOMElements.layoutEditor.overlay.classList.contains('hidden')) {
-                    e.preventDefault();
-                    let target = e.target.closest('.draggable');
-                    if (target) {
-                        layoutManager.activeEl = target;
-                        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                        layoutManager.initialX = clientX;
-                        layoutManager.initialY = clientY;
-                        layoutManager.initialRect = layoutManager.activeEl.getBoundingClientRect();
-                    }
-                }
-            },
-            startResize: (e) => {
-                if (!DOMElements.layoutEditor.overlay.classList.contains('hidden')) {
-                    e.preventDefault();
-                    e.stopPropagation(); // Prevent drag from starting
-                    layoutManager.isResizing = true;
-                    layoutManager.activeEl = e.target.closest('.draggable');
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    layoutManager.initialX = clientX;
-                    layoutManager.initialY = clientY;
-                    layoutManager.initialRect = layoutManager.activeEl.getBoundingClientRect();
-                }
-            },
-            drag: (e) => {
-                if (!layoutManager.activeEl) return;
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                const dX = clientX - layoutManager.initialX;
-                const dY = clientY - layoutManager.initialY;
-
-                if (layoutManager.isResizing) {
-                    const newWidth = Math.max(50, layoutManager.initialRect.width + dX);
-                    const newHeight = Math.max(50, layoutManager.initialRect.height + dY);
-                    layoutManager.activeEl.style.width = `${newWidth}px`;
-                    layoutManager.activeEl.style.height = `${newHeight}px`;
-                } else {
-                    layoutManager.activeEl.style.left = `${layoutManager.initialRect.x + dX}px`;
-                    layoutManager.activeEl.style.top = `${layoutManager.initialRect.y + dY}px`;
-                }
-            },
-            endDrag: () => {
-                layoutManager.activeEl = null;
-                layoutManager.isResizing = false;
-            }
-        };
-
-        // --- EVENT LISTENERS ---
+        adjustControlsButton.addEventListener('click', () => { togglePause(); isAdjustingControls = true; setupAdjustControls(); mobileControls.classList.add('is-adjusting'); });
+        
+        let draggedControl = null, startX, startY, startControlX, startControlY;
+        mobileControlsContainer.addEventListener('touchstart', e => { if (!isAdjustingControls) return; const target = e.target.closest('[data-control]'); if (target) { draggedControl = target.dataset.control; const touch = e.touches[0]; startX = touch.clientX; startY = touch.clientY; startControlX = controlSettings[draggedControl].x; startControlY = controlSettings[draggedControl].y; e.preventDefault(); } });
+        window.addEventListener('touchmove', e => { if (!draggedControl) return; const touch = e.touches[0]; const deltaX = touch.clientX - startX; const deltaY = startY - touch.clientY; const handedness = layoutRightRadio.checked ? 'right' : 'left'; if ( (draggedControl === 'dpad' && handedness === 'right') || (draggedControl === 'actions' && handedness === 'left') ) { controlSettings[draggedControl].x = startControlX + deltaX; } else { controlSettings[draggedControl].x = startControlX - deltaX; } controlSettings[draggedControl].y = startControlY + deltaY; applyControlSettings(); });
+        window.addEventListener('touchend', () => { draggedControl = null; });
+        function resizeCanvas() { prevTileSize = TILE_SIZE; const container = canvasContainer; if (container.offsetHeight === 0) { requestAnimationFrame(resizeCanvas); return; } const availableHeight = container.offsetHeight, availableWidth = container.offsetWidth; const scaleX = availableWidth / (MAZE_WIDTH * 32), scaleY = availableHeight / (MAZE_HEIGHT * 32); const scale = Math.min(scaleX, scaleY); TILE_SIZE = Math.max(8, Math.floor(32 * scale)); if (TILE_SIZE === prevTileSize && mazeCanvas) return; canvas.width = TILE_SIZE * MAZE_WIDTH; canvas.height = TILE_SIZE * MAZE_HEIGHT; if (player) { const ratio = TILE_SIZE / prevTileSize; player.x *= ratio; player.y *= ratio; player.width = TILE_SIZE * 0.8; player.height = TILE_SIZE * 0.8; enemies.forEach(e => { e.x *= ratio; e.y *= ratio; e.width = TILE_SIZE * 0.8; e.height = TILE_SIZE * 0.8; }); } if(maze.length > 0) drawMazeToCache(); }
         window.addEventListener('resize', resizeCanvas);
-        document.getElementById('controls-desktop').addEventListener('click', () => {
-            startGame('desktop');
-            InputManager.setup();
-        });
-        document.getElementById('controls-mobile').addEventListener('click', () => startGame('mobile'));
-        document.getElementById('playAgainButton').addEventListener('click', () => {
-            userScore = 0;
-            currentLevel = 1;
-            updateScoreDisplay();
-            startGame(currentMode);
-        });
-        document.getElementById('restartGameButton').addEventListener('click', () => {
-            userScore = 0;
-            currentLevel = 1;
-            updateScoreDisplay();
-            startGame(currentMode);
-        });
-        document.getElementById('modeSelectButton').addEventListener('click', () => {
-            updateElementVisibility(DOMElements.gameOverScreen, false);
-            updateElementVisibility(DOMElements.gameMenu, true);
-        });
-        document.getElementById('resumeButton').addEventListener('click', resumeGame);
-        document.getElementById('restartButtonPaused').addEventListener('click', () => {
-            userScore = 0;
-            currentLevel = 1;
-            updateScoreDisplay();
-            startGame(currentMode);
-        });
-        document.getElementById('modeSelectButtonPaused').addEventListener('click', () => {
-            updateElementVisibility(DOMElements.pausedScreen, false);
-            updateElementVisibility(DOMElements.gameMenu, true);
-        });
-        document.getElementById('open-layout-editor-btn').addEventListener('click', () => {
-            pauseGame();
-            updateElementVisibility(DOMElements.pausedScreen, false);
-            updateElementVisibility(DOMElements.layoutEditor.overlay, false);
-            DOMElements.mainContainer.classList.add('layout-editor-mode');
-            const controls = document.querySelectorAll('.draggable');
-            controls.forEach(c => c.style.pointerEvents = 'auto');
-            document.getElementById('save-layout-btn').onclick = () => {
-                layoutManager.save();
-                DOMElements.mainContainer.classList.remove('layout-editor-mode');
-                controls.forEach(c => c.style.pointerEvents = 'none');
-                updateElementVisibility(DOMElements.layoutEditor.overlay, false);
-                updateElementVisibility(DOMElements.pausedScreen, true);
-                resumeGame();
-            };
-            document.getElementById('reset-layout-btn').onclick = () => {
-                layoutManager.reset();
-            };
-            document.getElementById('exit-layout-btn').onclick = () => {
-                DOMElements.mainContainer.classList.remove('layout-editor-mode');
-                controls.forEach(c => c.style.pointerEvents = 'none');
-                updateElementVisibility(DOMElements.layoutEditor.overlay, false);
-                updateElementVisibility(DOMElements.pausedScreen, true);
-                resumeGame();
-            };
-        });
-
-        document.getElementById('fire-btn').addEventListener('click', () => {
-            if (!gamePaused && !isGameOver) {
-                playerTank.fire();
+        function startGame(mobile) {
+            isMobile = mobile;
+            startModal.style.display = 'none';
+            gameUI.classList.remove('hidden');
+            canvasContainer.classList.remove('hidden');
+            if (isMobile) {
+                document.body.classList.add('mobile-layout');
+                mobileControlsContainer.style.display = 'block';
+                adjustControlsButton.classList.remove('hidden');
+                mobileLayoutOptions.classList.remove('hidden');
+                loadControlSettings();
+                const savedHandedness = localStorage.getItem('tronTanksHandedness') || 'right';
+                if (savedHandedness === 'left') layoutLeftRadio.checked = true;
+                else layoutRightRadio.checked = true;
+                setMobileLayout(savedHandedness);
             }
-        });
-        
-        // Touch events for mobile buttons
-        document.querySelectorAll('#dpad-container button').forEach(button => {
-            button.pressed = false;
-            const handleStart = (e) => {
-                e.preventDefault();
-                button.pressed = true;
-                if (!turretButtonHeld) {
-                    if (button.id === 'up-btn') { playerTank.dx = 0; playerTank.dy = -PLAYER_SPEED; }
-                    if (button.id === 'down-btn') { playerTank.dx = 0; playerTank.dy = PLAYER_SPEED; }
-                    if (button.id === 'left-btn') { playerTank.dx = -PLAYER_SPEED; playerTank.dy = 0; }
-                    if (button.id === 'right-btn') { playerTank.dx = PLAYER_SPEED; playerTank.dy = 0; }
-                } else {
-                    if (button.id === 'up-btn') playerTank.turretAngle = -Math.PI / 2;
-                    if (button.id === 'down-btn') playerTank.turretAngle = Math.PI / 2;
-                    if (button.id === 'left-btn') playerTank.turretAngle = Math.PI;
-                    if (button.id === 'right-btn') playerTank.turretAngle = 0;
-                }
-            };
-            const handleEnd = () => {
-                button.pressed = false;
-                if (!turretButtonHeld) {
-                    playerTank.dx = 0;
-                    playerTank.dy = 0;
-                }
-            };
-            button.addEventListener('touchstart', handleStart);
-            button.addEventListener('touchend', handleEnd);
-            button.addEventListener('mousedown', handleStart);
-            button.addEventListener('mouseup', handleEnd);
-        });
-
-        document.getElementById('pauseButton').addEventListener('click', pauseGame);
-
-        // --- INITIALIZATION ---
-        async function init() {
-            // Pre-fetch all needed CSS colors
-            getComputedColor('--player-color');
-            getComputedColor('--enemy-color');
-            getComputedColor('--powerup-rapid');
-            getComputedColor('--powerup-health');
-            getComputedColor('--wall-color');
-
-            await setupFirebase();
-            layoutManager.init();
-            window.addEventListener('resize', resizeCanvas);
+            gameStarted = true;
+            init();
             resizeCanvas();
-            updateElementVisibility(DOMElements.gameMenu, true);
+            lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
         }
-        window.onload = init;
+
+        desktopStartBtn.addEventListener('click', () => startGame(false));
+        mobileStartBtn.addEventListener('click', () => startGame(true));
+
     </script>
 </body>
 </html>
